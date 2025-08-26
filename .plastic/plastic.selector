@@ -1,0 +1,4 @@
+repository "Project Talk"
+  path "/"
+    br "/main"
+    co "/main"

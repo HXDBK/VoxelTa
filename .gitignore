@@ -1,0 +1,13 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild*/
+[Ll]ogs/
+UserSettings/
+.vs/
+*.csproj
+*.sln
+*.user
+*.unitypackage
+Assets/Plugins/Easy Save 3/
+Assets/Plugins/Demigiant/
