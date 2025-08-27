@@ -226,15 +226,32 @@ namespace Setting
          {
              if (_isChangeData)
              {
-                 MessageManager.instance.ShowPropUpMessage("是否保存","有未保存的数据，是否需要保存", () =>
+                 switch (LocalizerManager.GetCode())
                  {
-                     SaveData();
-                     DoHidePanel();
-                 },()=>
-                 {
-                     SetDefData();
-                     DoHidePanel();
-                 },"保存","不保存");
+                     case "zh-Hans":
+                         MessageManager.instance.ShowPropUpMessage("是否保存","有未保存的数据，是否需要保存", () =>
+                         {
+                             SaveData();
+                             DoHidePanel();
+                         },()=>
+                         {
+                             SetDefData();
+                             DoHidePanel();
+                         },"保存","不保存");
+                         break;
+                     case "en":
+                         MessageManager.instance.ShowPropUpMessage("Save?","There is unsaved data. Do you want to save it?", () =>
+                         {
+                             SaveData();
+                             DoHidePanel();
+                         },()=>
+                         {
+                             SetDefData();
+                             DoHidePanel();
+                         },"Save","Don’t Save");
+                         break;
+                 }
+
              }
              else
              {

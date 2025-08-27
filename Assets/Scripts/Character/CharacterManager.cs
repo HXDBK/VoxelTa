@@ -378,15 +378,31 @@ namespace Character
         {
             if (_isChangeData)
             {
-                MessageManager.instance.ShowPropUpMessage("是否保存","有未保存的数据，是否需要保存", () =>
+                switch (LocalizerManager.GetCode())
                 {
-                    SaveData();
-                    DoHidePanel();
-                },()=>
-                {
-                    SetDefData();
-                    DoHidePanel();
-                },"保存","不保存");
+                    case "zh-Hans":
+                        MessageManager.instance.ShowPropUpMessage("是否保存","有未保存的数据，是否需要保存?", () =>
+                        {
+                            SaveData();
+                            DoHidePanel();
+                        },()=>
+                        {
+                            SetDefData();
+                            DoHidePanel();
+                        },"保存","不保存");
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowPropUpMessage("Save?","There is unsaved data. Do you want to save it?", () =>
+                        {
+                            SaveData();
+                            DoHidePanel();
+                        },()=>
+                        {
+                            SetDefData();
+                            DoHidePanel();
+                        },"Save","Don’t Save");
+                        break;
+                }
             }
             else
             {
@@ -692,19 +708,31 @@ namespace Character
         {
             if (_isChangeData)
             {
-                MessageManager.instance.ShowPropUpMessage("是否保存","有未保存的数据，是否需要保存", () =>
+                switch (LocalizerManager.GetCode())
                 {
-                    SaveData();
-                    curCharacter = characterData;
-                    OnSetCharacterData?.Invoke(curCharacter);
-                    UpdateCharacterPanel();
-                },()=>
-                {
-                    SetDefData();
-                    curCharacter = characterData;
-                    OnSetCharacterData?.Invoke(curCharacter);
-                    UpdateCharacterPanel();
-                },"保存","不保存");
+                    case "zh-Hans":
+                        MessageManager.instance.ShowPropUpMessage("是否保存","有未保存的数据，是否需要保存?", () =>
+                        {
+                            SaveData();
+                            DoHidePanel();
+                        },()=>
+                        {
+                            SetDefData();
+                            DoHidePanel();
+                        },"保存","不保存");
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowPropUpMessage("Save?","There is unsaved data. Do you want to save it?", () =>
+                        {
+                            SaveData();
+                            DoHidePanel();
+                        },()=>
+                        {
+                            SetDefData();
+                            DoHidePanel();
+                        },"Save","Don’t Save");
+                        break;
+                }
             }
             else
             {
@@ -818,7 +846,17 @@ namespace Character
                 new ExtensionFilter("Live2D Model", "model3.json"),
                 new ExtensionFilter("Image Files", "png", "jpg", "jpeg"),
             };
-            string[] paths = StandaloneFileBrowser.OpenFilePanel("选择 Live2D 模型文件", "", extensions, false);
+            var title = "选择 Live2D 模型文件";
+            switch (LocalizerManager.GetCode())
+            {
+                case "zh-Hans":
+                    title = "选择 Live2D 模型文件";
+                    break;
+                case "en":
+                    title = "Choose Live2D Model File";
+                    break;
+            }
+            string[] paths = StandaloneFileBrowser.OpenFilePanel(title, "", extensions, false);
 
             if (paths.Length == 0 || string.IsNullOrEmpty(paths[0]))
             {
@@ -851,7 +889,15 @@ namespace Character
 
         public void ResetModel()
         {
-            MessageManager.instance.ShowPropUpMessage("确认",$"确认清空<b>{curCharacter.characterTitle}</b>的人物模型吗？",DoResetModel);
+            switch (LocalizerManager.GetCode())
+            {
+                case "zh-Hans":
+                    MessageManager.instance.ShowPropUpMessage("确认",$"确认清空<b>{curCharacter.characterTitle}</b>的人物模型吗？",DoResetModel);
+                    break;
+                case "en":
+                    MessageManager.instance.ShowPropUpMessage("Confirm","Are you sure you want to clear the character illustration of <b>{curCharacter.characterTitle}</b>?",DoResetModel);
+                    break;
+            }
         }
         private void DoResetModel()
         {
@@ -1004,13 +1050,29 @@ namespace Character
                         loadButton.gameObject.SetActive(true);
                         if (curCharacter.live2dPath is { Length: > 0 })
                         {
-                            loadText.text = "角色模型已设置，点击加载";
+                            switch (LocalizerManager.GetCode())
+                            {
+                                case "zh-Hans":
+                                    loadText.text = "角色模型已设置，点击加载";
+                                    break;
+                                case "en":
+                                    loadText.text = "Role model has been set, click to load";
+                                    break;
+                            }
                             loadButton.onPointerClick.RemoveAllListeners();
                             loadButton.onPointerClick.AddListener(LoadLive2d);
                         }
                         else
                         {
-                            loadText.text = "角色模型未设置，点击选择角色模型";
+                            switch (LocalizerManager.GetCode())
+                            {
+                                case "zh-Hans":
+                                    loadText.text = "角色模型未设置，点击选择角色模型";
+                                    break;
+                                case "en":
+                                    loadText.text = "Role model is not set, click to select role model";
+                                    break;
+                            }
                             loadButton.onPointerClick.RemoveAllListeners();
                             loadButton.onPointerClick.AddListener(SetLive2d);
                         }
@@ -1021,7 +1083,15 @@ namespace Character
                 }else if (curCharacter.live2dPath is { Length: > 0 })
                 {
                     loadButton.gameObject.SetActive(true);
-                    loadText.text = "角色模型已设置，点击加载";
+                    switch (LocalizerManager.GetCode())
+                    {
+                        case "zh-Hans":
+                            loadText.text = "角色模型已设置，点击加载";
+                            break;
+                        case "en":
+                            loadText.text = "Role model has been set, click to load";
+                            break;
+                    }
                     loadButton.onPointerClick.RemoveAllListeners();
                     loadButton.onPointerClick.AddListener(LoadLive2d);
                     detailBtn.gameObject.SetActive(false);
@@ -1030,7 +1100,15 @@ namespace Character
                 else
                 {
                     loadButton.gameObject.SetActive(true);
-                    loadText.text = "角色模型未设置，点击选择角色模型";
+                    switch (LocalizerManager.GetCode())
+                    {
+                        case "zh-Hans":
+                            loadText.text = "角色模型未设置，点击选择角色模型";
+                            break;
+                        case "en":
+                            loadText.text = "Role model is not set, click to select role model";
+                            break;
+                    }
                     loadButton.onPointerClick.RemoveAllListeners();
                     loadButton.onPointerClick.AddListener(SetLive2d);
                     detailBtn.gameObject.SetActive(false);
@@ -1341,17 +1419,35 @@ namespace Character
         {
             if (_customExpChanged)
             {
-                MessageManager.instance.ShowPropUpMessage("保存","是否需要保存当前的自定义表情？", SaveAndHideCustomExp, () =>
+                switch (LocalizerManager.GetCode())
                 {
-                    _curCustomExp = null;
-                    customExpPanel.Hide();
-                    UseSnapshot();
-                    parameterPageList.Refresh();
-                    curModel.SetBlink(curCharacter.isBlink);
-                    curModel.SetBreath(curCharacter.isBreath);
-                    curModel.SetLookMouse(curCharacter.isLookAt);
-                    curModel.ClearAllExpressions();
-                });
+                    case "zh-Hans":
+                        MessageManager.instance.ShowPropUpMessage("保存","是否需要保存当前的自定义表情？", SaveAndHideCustomExp, () =>
+                        {
+                            _curCustomExp = null;
+                            customExpPanel.Hide();
+                            UseSnapshot();
+                            parameterPageList.Refresh();
+                            curModel.SetBlink(curCharacter.isBlink);
+                            curModel.SetBreath(curCharacter.isBreath);
+                            curModel.SetLookMouse(curCharacter.isLookAt);
+                            curModel.ClearAllExpressions();
+                        });
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowPropUpMessage("Save?","Do you want to save the current custom expression?", SaveAndHideCustomExp, () =>
+                        {
+                            _curCustomExp = null;
+                            customExpPanel.Hide();
+                            UseSnapshot();
+                            parameterPageList.Refresh();
+                            curModel.SetBlink(curCharacter.isBlink);
+                            curModel.SetBreath(curCharacter.isBreath);
+                            curModel.SetLookMouse(curCharacter.isLookAt);
+                            curModel.ClearAllExpressions();
+                        });
+                        break;
+                }
             }
             else
             {
@@ -1614,12 +1710,26 @@ namespace Character
         public void RemoveMemory()
         {
             if (_curMemory == null || curCharacter == null) return;
-            MessageManager.instance.ShowPropUpMessage("确认",$"确认删除记忆 {_curMemory.title} 吗？",()=>
+            switch (LocalizerManager.GetCode())
             {
-                curCharacter.memories.Remove(_curMemory);
-                memoryPageList.SetData(curCharacter.memories);
-                HideMemoryPanel();
-            });
+                case "zh-Hans":
+                    MessageManager.instance.ShowPropUpMessage("确认",$"确认删除记忆 {_curMemory.title} 吗？",()=>
+                    {
+                        curCharacter.memories.Remove(_curMemory);
+                        memoryPageList.SetData(curCharacter.memories);
+                        HideMemoryPanel();
+                    });
+                    break;
+                case "en":
+                    MessageManager.instance.ShowPropUpMessage("Confirm",$"Are you sure you want to delete the memory {_curMemory.title}?",()=>
+                    {
+                        curCharacter.memories.Remove(_curMemory);
+                        memoryPageList.SetData(curCharacter.memories);
+                        HideMemoryPanel();
+                    });
+                    break;
+            }
+
         }
 
         #endregion

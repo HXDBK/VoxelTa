@@ -69,7 +69,7 @@ public class GameManager : MonoBehaviour
     {
         if (modeInx == 2 && string.IsNullOrEmpty(CharacterManager.instance.curCharacter.live2dPath))
         {
-            MessageManager.instance.ShowMessage("请先为人物设置模型，再开启桌面模式", MessageType.Warning);
+            MessageManager.instance.ShowMessage("请先为当前对话设置模型", MessageType.Warning);
             modeDropdown.onValueChanged.RemoveAllListeners();
             modeDropdown.value = SettingData.modeIndex;
             modeDropdown.onValueChanged.AddListener(ChangeMode);

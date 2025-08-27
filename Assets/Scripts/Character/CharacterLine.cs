@@ -29,15 +29,48 @@ namespace Character
             });
             export.onPointerClick.AddListener(() =>
             {
-                MessageManager.instance.ShowPropUpMessage("确认",$"确认导出 {characterData.characterTitle} 的数据吗？",()=>CharacterManager.instance.ExportCharacter(characterData));
+                switch (LocalizerManager.GetCode())
+                {
+                    case "zh-Hans":
+                        MessageManager.instance.ShowPropUpMessage("确认",$"确认导出 {characterData.characterTitle} 的数据吗？",()=>CharacterManager.instance.ExportCharacter(characterData));
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to export {characterData.characterTitle} data?",()=>CharacterManager.instance.ExportCharacter(characterData));
+                        break;
+                    default:
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to export {characterData.characterTitle} data?",()=>CharacterManager.instance.ExportCharacter(characterData));
+                        break;
+                }
             });
             copy.onPointerClick.AddListener(() =>
             {
-                MessageManager.instance.ShowPropUpMessage("确认",$"确认复制 {characterData.characterTitle} 吗？\n将会创建一个 {characterData.characterTitle} 副本 对话",()=>CharacterManager.instance.CopyCharacter(characterData));
+                switch (LocalizerManager.GetCode())
+                {
+                    case "zh-Hans":
+                        MessageManager.instance.ShowPropUpMessage("确认",$"确认复制 {characterData.characterTitle} 吗？\n将会创建一个 {characterData.characterTitle} 副本 对话",()=>CharacterManager.instance.CopyCharacter(characterData));
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to copy {characterData.characterTitle} data?",()=>CharacterManager.instance.CopyCharacter(characterData));
+                        break;
+                    default:
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to copy {characterData.characterTitle} data?",()=>CharacterManager.instance.CopyCharacter(characterData));
+                        break;
+                }
             });
             delete.onPointerClick.AddListener(() =>
             {
-                MessageManager.instance.ShowPropUpMessage("确认",$"确认删除 {characterData.characterTitle} 吗？",()=>CharacterManager.instance.RemoveCharacter(characterData));
+                switch (LocalizerManager.GetCode())
+                {
+                    case "zh-Hans":
+                        MessageManager.instance.ShowPropUpMessage("确认",$"确认删除 {characterData.characterTitle} 吗？",()=>CharacterManager.instance.RemoveCharacter(characterData));
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.CopyCharacter(characterData));
+                        break;
+                    default:
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.CopyCharacter(characterData));
+                        break;
+                }
             });
         }
 

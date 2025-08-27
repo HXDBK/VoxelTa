@@ -25,7 +25,18 @@ namespace Live2D
             _modelParameter = (item as ModelExp.TmpExpParameter);
             if (_modelParameter == null) return;
 
-            valueText.text = "值设置为 " + _modelParameter.value.ToString("F1");
+            switch (LocalizerManager.GetCode())
+            {
+                case "zh-Hans":
+                    valueText.text = "值设置为 " + _modelParameter.value.ToString("F1");
+                    break;
+                case "en":
+                    valueText.text = "Value set to " + _modelParameter.value.ToString("F1");
+                    break;
+                default:
+                    valueText.text = "Value set to " + _modelParameter.value.ToString("F1");
+                    break;
+            }
             parameterIdText.text = _modelParameter.parameterId;
             parameterNameText.text = _modelParameter.parameterDisplayName is { Length: > 0 } ? _modelParameter.parameterDisplayName : _modelParameter.parameterId;
         }

@@ -186,7 +186,15 @@ public class DialogLine : PageLineItem
     }
     public void RemoveLine()
     {
-        MessageManager.instance.ShowPropUpMessage("确认",$"确认删除这条对话以及后续对话吗？\n为保证对话结构合理性，本条对话以及下面的所有对话都会被删除。",()=>DialogManager.instance.RemoveLine(entry));
+        switch (LocalizerManager.GetCode())
+        {
+            case "zh-Hans":
+                MessageManager.instance.ShowPropUpMessage("确认",$"确认删除这条对话以及后续对话吗？\n为保证对话结构合理性，本条对话以及下面的所有对话都会被删除。",()=>DialogManager.instance.RemoveLine(entry));
+                break;
+            case "en":
+                MessageManager.instance.ShowPropUpMessage("Confirm",$"Are you sure you want to delete this dialogue and all following dialogues?\nTo ensure the dialogue structure remains consistent, this dialogue and all subsequent ones will be deleted.",()=>DialogManager.instance.RemoveLine(entry));
+                break;
+        }
     }
 
     public void EditLine()

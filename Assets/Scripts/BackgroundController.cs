@@ -118,7 +118,18 @@ public class BackgroundController : MonoBehaviour
     
     public void RemoveBackground()
     {
-        MessageManager.instance.ShowPropUpMessage("确认","确认要移除背景图片吗？",DoRemoveBackground);
+        switch (LocalizerManager.GetCode())
+        {
+            case "zh-Hans":
+                MessageManager.instance.ShowPropUpMessage("确认","确认要移除背景图片吗？",DoRemoveBackground);
+                break;
+            case "en":
+                MessageManager.instance.ShowPropUpMessage("Confirm","Are you sure you want to remove the background image?",DoRemoveBackground);
+                break;
+            default:
+                MessageManager.instance.ShowPropUpMessage("Confirm","Are you sure you want to remove the background image?",DoRemoveBackground);
+                break;
+        }
     }
 
     private void DoRemoveBackground()

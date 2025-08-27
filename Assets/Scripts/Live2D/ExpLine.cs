@@ -76,7 +76,15 @@ namespace Live2D
 
         public void RemoveSelf()
         {
-            MessageManager.instance.ShowPropUpMessage("确认",$"确定要移除表情 {_modelExp.expName} 吗？",DoRemove);
+            switch (LocalizerManager.GetCode())
+            {
+                case "zh-Hans":
+                    MessageManager.instance.ShowPropUpMessage("确认",$"确定要移除表情 {_modelExp.expName} 吗？",DoRemove);
+                    break;
+                case "en":
+                    MessageManager.instance.ShowPropUpMessage("Confirm",$"Are you sure you want to remove the expression {_modelExp.expName}?",DoRemove);
+                    break;
+            }
         }
 
         private void DoRemove()

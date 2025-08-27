@@ -36,8 +36,31 @@ public class MessageManager : MonoBehaviour
     {
         titleText.text = title;
         propUpMessageText.text = message;
-        okButton.Text.text = okBtnStr;
-        noButton.Text.text = noBtnStr;
+        if (okBtnStr == "确认")
+        {
+            if (LocalizerManager.GetCode() == "zh-Hans")
+            {
+                okButton.Text.text = okBtnStr;
+            }
+            else 
+            {
+                okButton.Text.text = "Confirm";
+            }
+        }
+
+        if (noBtnStr == "取消")
+        {
+            if (LocalizerManager.GetCode() == "zh-Hans")
+            {
+                noButton.Text.text = noBtnStr;
+            }
+            else 
+            {
+                noButton.Text.text = "Cancel";
+            }
+        }
+
+
         noButton.onPointerClick.RemoveAllListeners();
         if (onNo == null)
         {
@@ -61,6 +84,7 @@ public class MessageManager : MonoBehaviour
     }
     public void ShowMessage(string message, MessageType messageType = MessageType.Info)
     {
+        message = LocalizerManager.GetValue(message);
         switch (messageType)
         {
             case MessageType.Info:
