@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[中文版](README_CN.md) | English
+[中文版](README_zh.md) | English
 
 A Unity-based desktop virtual chat companion project. Create the 'Ta' of your dreams.  
 Ta — means he, she, it, or they.
