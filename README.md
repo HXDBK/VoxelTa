@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/pic7.png" width="700">
+  <img src="Images/pic7.png" width="700">
 </p>
 
 <h1 align="center">VoxelTa</h1>
@@ -39,11 +39,11 @@ After downloading, please extract the folder first, then double-click **VoxelTa.
 
 ### 2. Create Your First Character
 
-[<img src="images/pic8.png" width="500">](images/pic8.png)
+[<img src="Images/pic8.png" width="500">](Images/pic8.png)
 
 If this is your first time entering VoxelTa, this interface will pop up. You can select your language and click the **Add Character** button to create your first character.
 
-[<img src="images/pic9.png" width="500">](images/pic9.png)
+[<img src="Images/pic9.png" width="500">](Images/pic9.png)
 
 The character interface is divided into 3 main sections. The leftmost is the character dialogue selection section. In VoxelTa, you can create multiple characters. Through the left list, you can **create new characters**, **export characters**, **import characters**, **copy characters**, and **delete characters**. After selecting a character from the left character list, you can start configuring this character (items marked with * are required).
 
@@ -58,7 +58,7 @@ The character interface is divided into 3 main sections. The leftmost is the cha
 #### Portrait Settings
 If you haven't set a Live2D model for the current character, click this area to select a Live2D model for your character. You need to select the file ending with .model3.json in the Live2D files. If there are no issues, your Live2D model will be loaded.
 
-[<img src="images/pic10.png" width="500">](images/pic10.png)
+[<img src="Images/pic10.png" width="500">](Images/pic10.png)
 
 Click the save button in the upper right corner and close the character settings page.  
 After the Live2D model is set up, new buttons will appear in the upper right corner of the portrait area. Subsequently, clicking the **gear** button allows further configuration of Live2D. For details, see [Portrait Settings and Custom Expressions](#portrait-settings-and-custom-expressions).
@@ -66,7 +66,7 @@ After the Live2D model is set up, new buttons will appear in the upper right cor
 ### 3. Set Up Large Language Model
 Click the **gear** icon in the upper right corner of the screen to open the dialogue settings interface.
 
-[<img src="images/pic11.png" width="500">](images/pic11.png)
+[<img src="Images/pic11.png" width="500">](Images/pic11.png)
 
 To chat with your companion, you need to set up a large language model for the character. You can configure the model to use in the left column of the interface:  
 **Model Selection**: VoxelTa provides some default model configurations (DeepSeek, ChatGPT, Gemini). You can also choose custom to configure other third-party models.  
@@ -83,7 +83,7 @@ For other settings interfaces if needed, please refer to:
 
 ### 4. Dialogue
 
-[<img src="images/pic12.png" width="500">](images/pic12.png)
+[<img src="Images/pic12.png" width="500">](Images/pic12.png)
 
 After returning to the dialogue interface, you can try sending your first message.  
 There are three modes below the dialogue interface:  
@@ -93,14 +93,14 @@ There are three modes below the dialogue interface:
 
 ### Portrait Settings and Custom Expressions
 
-[<img src="images/pic13.png" width="500">](images/pic13.png)
+[<img src="Images/pic13.png" width="500">](Images/pic13.png)
 
 **Model Parameter Adjustment**: All parameters of your Live2D model will be displayed on the left side of the interface. You can directly adjust these parameters to modify the Live2D model's appearance.  
 **Model Auto Behaviors**: You can enable or disable some automatic behaviors of the model, including breathing, blinking, and mouse tracking.  
 **Model Expressions**: The far right side of the interface shows all expressions owned by this model (some models come with expressions).  
 **Custom Expressions**: You can add your custom expressions through the **+** button in the upper right corner of the interface.  
 
-[<img src="images/pic14.png" width="500">](images/pic14.png)
+[<img src="Images/pic14.png" width="500">](Images/pic14.png)
 
 Custom expressions have the following settings:  
 **Expression Recognition Identifier***: When this identifier appears in the character's reply, the character will make this expression until the next reply (supports regex).  

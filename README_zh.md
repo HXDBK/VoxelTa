@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/pic7.png" width="700">
+  <img src="Images/pic7.png" width="700">
 </p>
 
 <h1 align="center">VoxelTa</h1>
@@ -37,11 +37,11 @@
 下载好后请先解压文件夹，双击解压后的文件夹中的 **VoxelTa.exe** 运行软件
 ### 2. 创建你的第一个人物
 
-[<img src="images/pic0.png" width="500">](images/pic0.png)
+[<img src="Images/pic0.png" width="500">](Images/pic0.png)
 
 如果你是第一次进入VoxelTa，会弹出这样的界面，你可以在这个界面选择你使用的语言，并点击 **创建人物** 按钮来创建你的第一个人物。
 
-[<img src="images/pic1.png" width="500">](images/pic1.png)
+[<img src="Images/pic1.png" width="500">](Images/pic1.png)
 
 人物界面主要分为3个部分，最左侧是人物对话选择部分，在VoxelTa中，你可以创建多个角色，通过左侧的列表，你可以**创建新角色** ，**导出角色**，**导入角色**，**复制角色**和**删除角色**，在左侧角色列表选择一个角色之后，你可以开始对这个角色进行设置（标\*为必填项）
 #### 人物设定
@@ -54,14 +54,14 @@
 #### 立绘设置
 如果你还没有为当前角色设置Live2d模型，点击该区域可以为你的角色选择一个Live2d模型，你需要选择Live2d文件中的以.model3.json结尾的文件，没有问题的话，你的Live2d模型会被加载出来。
 
-[<img src="images/pic2.png" width="500">](images/pic2.png)
+[<img src="Images/pic2.png" width="500">](Images/pic2.png)
 
 点击右上角保存按钮并关闭人物设定页面  
 在Live2d模型设置完成后立绘区域的右上方会出现新的按钮，后续点击**齿轮**按钮可以对Live2d进行进一步的设置，详情见[立绘设置和自定义表情](#立绘设置和自定义表情)。
 ### 3.设置大语言模型
 点击屏幕右上角的**齿轮**图标可以打开对话设置界面
 
-[<img src="images/pic3.png" width="500">](images/pic3.png)
+[<img src="Images/pic3.png" width="500">](Images/pic3.png)
 
 想要和你的”Ta“对话的话，需要为角色设置大语言模型，在界面的左侧一列可以设置使用的模型：  
 **模型选择**：VoxelTa提供了一些默认的模型配置（DeepSeek，ChartGPT，Gemini）你也可以选择自定义来配置其他的第三方模型。  
@@ -77,7 +77,7 @@
 [使用文字转语音](#使用文字转语音)
 ### 4.对话
 
-[<img src="images/pic4.png" width="500">](images/pic4.png)
+[<img src="Images/pic4.png" width="500">](Images/pic4.png)
 
 回到对话界面后，你就可以尝试发送你的第一条消息了。  
 对话界面下有三种模式  
@@ -86,14 +86,14 @@
 **桌面模式**：橘色展示为浮窗形式，在角色人物上拖动可以改变角色位置，滚动滚轮可以改变角色人物大小，在角色人物上按住右键可以唤出菜单。  
 ### 立绘设置和自定义表情
 
-[<img src="images/pic5.png" width="500">](images/pic5.png)
+[<img src="Images/pic5.png" width="500">](Images/pic5.png)
 
 **模型参数调整**：在界面左侧将会展示你的Live2d模型的所有参数，可以直接调整这里的参数修改Live2d模型的外观。  
 **模型自动行为**：你可以打开或关闭模型的一些自动行为，包括呼吸、眨眼和鼠标跟随。  
 **模型表情**：界面最右侧展示了该模型所拥有的所有表情（一些模型会附带一些表情）。  
 **自定义表情**：你可以通过界面右上方的 **\+** 按钮来添加你的自定义表情。  
 
-[<img src="images/pic6.png" width="500">](images/pic6.png)
+[<img src="Images/pic6.png" width="500">](Images/pic6.png)
 
 自定义表情有如下设置：  
 **表情识别标识\***：当角色的回复中出现该标识的时候，角色将会做出这个表情，直到下一句回复（支持正则）。  
