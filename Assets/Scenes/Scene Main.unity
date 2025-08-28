@@ -4348,6 +4348,7 @@ GameObject:
   - component: {fileID: 251586927}
   - component: {fileID: 251586929}
   - component: {fileID: 251586928}
+  - component: {fileID: 251586930}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -4471,6 +4472,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 251586926}
   m_CullTransparentMesh: 1
+--- !u!114 &251586930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 251586926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:2facf8ce355cabc4da82a7ea8a052360
+    m_TableEntryReference:
+      m_KeyId: 723777849581568
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 251586928}
+        m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &252303815
 GameObject:
   m_ObjectHideFlags: 0
@@ -6896,7 +6937,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -67.849976, y: -457.12}
+  m_AnchoredPosition: {x: -67.8501, y: -457.12}
   m_SizeDelta: {x: 45, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &382375042
@@ -7027,7 +7068,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 989.83997, y: -35.059875}
+  m_AnchoredPosition: {x: 989.83997, y: -35.059937}
   m_SizeDelta: {x: 865.52, y: -156.85}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &385123336
@@ -19420,7 +19461,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5844793802093261460, guid: 05a6cecc40a14624798b3b78b5c294fd, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -34.837708
+      value: -34.83777
       objectReference: {fileID: 0}
     - target: {fileID: 5844793802093261460, guid: 05a6cecc40a14624798b3b78b5c294fd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -36432,7 +36473,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5844793802093261460, guid: 05a6cecc40a14624798b3b78b5c294fd, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -43.58966
+      value: -43.58972
       objectReference: {fileID: 0}
     - target: {fileID: 5844793802093261460, guid: 05a6cecc40a14624798b3b78b5c294fd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -40890,6 +40931,7 @@ MonoBehaviour:
   - key: "\u8BED\u97F3\u64AD\u653E\u5931\u8D25"
     enValue: Voice playback failed
   chineseToggle: {fileID: 1885967536}
+  enmToggle: {fileID: 605886164}
   curLanguageCode: zh-Hans
 --- !u!1 &1994468752
 GameObject:
@@ -46894,7 +46936,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 04e3923756e60ae418df480bf1f64bf3, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

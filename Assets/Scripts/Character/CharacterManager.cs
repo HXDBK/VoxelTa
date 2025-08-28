@@ -592,7 +592,18 @@ namespace Character
             {
                 characterPanel.Show();
             }
-            var characterData = new CharacterData { characterTitle = "未设置" };
+
+            var title = "Untitled";
+            switch (LocalizerManager.GetCode())
+            {
+                case "zh-Hans":
+                    title = "未设置";
+                    break;
+                case "en":
+                    title = "Untitled";
+                    break;
+            }
+            var characterData = new CharacterData { characterTitle = title };
             characterDatas.Add(characterData);
             SetCurCharacter(characterData);
             SetData();

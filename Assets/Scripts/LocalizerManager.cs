@@ -50,6 +50,7 @@ public class LocalizerManager : MonoBehaviour
 };
 
     public Toggle chineseToggle;
+    public Toggle enmToggle;
     public string curLanguageCode = "zh-Hans";
     private void Awake()
     {
@@ -62,6 +63,8 @@ public class LocalizerManager : MonoBehaviour
         if (!init.IsDone) yield return init;
         curLanguageCode = ES3.Load("language",defaultValue:"zh-Hans");
         chineseToggle.isOn = curLanguageCode == "zh-Hans";
+        enmToggle.isOn = curLanguageCode != "zh-Hans";
+        Debug.Log(chineseToggle.isOn);
         SetByCode(curLanguageCode);
         chineseToggle.onValueChanged.AddListener(ChangeLanguage);
     }

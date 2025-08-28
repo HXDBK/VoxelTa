@@ -427,7 +427,15 @@ namespace Dialog
             // 添加记忆内容
             if (_characterManager.curCharacter.HasMemory)
             {
-                systemInstructionBuilder.Append("以下是你的一些重要记忆：");
+                switch (LocalizerManager.GetCode())
+                {
+                    case "zh-Hans":
+                        systemInstructionBuilder.Append("以下是你的一些重要记忆：");
+                        break;
+                    case "en":
+                        systemInstructionBuilder.Append("Here are some important memories for you:");
+                        break;
+                }
                 systemInstructionBuilder.Append(_characterManager.curCharacter.GetMemorise());
             }
             

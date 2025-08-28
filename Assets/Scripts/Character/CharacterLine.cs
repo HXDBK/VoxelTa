@@ -57,6 +57,7 @@ namespace Character
                         break;
                 }
             });
+            
             delete.onPointerClick.AddListener(() =>
             {
                 switch (LocalizerManager.GetCode())
@@ -65,10 +66,10 @@ namespace Character
                         MessageManager.instance.ShowPropUpMessage("确认",$"确认删除 {characterData.characterTitle} 吗？",()=>CharacterManager.instance.RemoveCharacter(characterData));
                         break;
                     case "en":
-                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.CopyCharacter(characterData));
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.RemoveCharacter(characterData));
                         break;
                     default:
-                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.CopyCharacter(characterData));
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.RemoveCharacter(characterData));
                         break;
                 }
             });

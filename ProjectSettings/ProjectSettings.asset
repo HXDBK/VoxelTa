@@ -16,7 +16,7 @@ PlayerSettings:
   productName: VoxelTa
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
-  m_SplashScreenBackgroundColor: {r: 0.3207547, g: 0.3207547, b: 0.3207547, a: 1}
+  m_SplashScreenBackgroundColor: {r: 0.064492, g: 0.069076665, b: 0.092, a: 1}
   m_ShowUnitySplashScreen: 1
   m_ShowUnitySplashLogo: 1
   m_SplashScreenOverlayOpacity: 1
@@ -142,7 +142,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 1.1.0
+  bundleVersion: 1.1.2
   preloadedAssets:
   - {fileID: 11400000, guid: 376b90d8e4bc36847b168a3562608349, type: 2}
   metroInputSource: 0

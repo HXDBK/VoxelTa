@@ -41,14 +41,41 @@ public class DialogLine : PageLineItem
         if(!gameObject.activeInHierarchy){return;}
         var target = (DialogueEntry) item;
         entry = target;
-        string talker = entry.role switch
+        string talker;
+        if (entry.role == "user")
         {
-            "user" => "你",
-            "assistant" => string.IsNullOrEmpty(CharacterManager.instance.curCharacter.characterName)
+            if (string.IsNullOrEmpty(CharacterManager.instance.curCharacter.userName))
+            {
+                switch (LocalizerManager.GetCode())
+                {
+                    case "zh-Hans":
+                        talker = "你";
+                        break;
+                    case "en":
+                        talker = "You";
+                        break;
+                    default:
+                        talker = "You";
+                        break;
+                }
+            }
+            else
+            {
+                talker = CharacterManager.instance.curCharacter.userName;
+            }
+
+        }
+        else if (entry.role == "assistant")
+        {
+            talker = string.IsNullOrEmpty(CharacterManager.instance.curCharacter.characterName)
                 ? "Ta"
-                : CharacterManager.instance.curCharacter.characterName,
-            _ => entry.role
-        };
+                : CharacterManager.instance.curCharacter.characterName;
+        }
+        else
+        {
+            talker = entry.role;
+        }
+
         string time = entry.time.ToString("yy-MM-dd HH:mm");
         ChangeTalker(entry.role,entry.content);
         var str1 = ConvertMarkdownToTMP(target.content);
