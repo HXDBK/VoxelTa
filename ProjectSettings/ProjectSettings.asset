@@ -16,7 +16,7 @@ PlayerSettings:
   productName: VoxelTa
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
-  m_SplashScreenBackgroundColor: {r: 0.064492, g: 0.069076665, b: 0.092, a: 1}
+  m_SplashScreenBackgroundColor: {r: 0.060265, g: 0.06851, b: 0.085, a: 1}
   m_ShowUnitySplashScreen: 1
   m_ShowUnitySplashLogo: 1
   m_SplashScreenOverlayOpacity: 1
@@ -40,7 +40,7 @@ PlayerSettings:
     width: 1
     height: 1
   m_SplashScreenLogos:
-  - logo: {fileID: 21300000, guid: bca162eb0237d6f4b99c87703abcf856, type: 3}
+  - logo: {fileID: 21300000, guid: ce7c6cbeb8a68cf45b7b183238bb7f08, type: 3}
     duration: 2
   m_VirtualRealitySplashScreen: {fileID: 2800000, guid: bca162eb0237d6f4b99c87703abcf856, type: 3}
   m_HolographicTrackingLossScreen: {fileID: 0}
@@ -142,7 +142,7 @@ PlayerSettings:
   loadStoreDebugModeEnabled: 0
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
-  bundleVersion: 1.1.2
+  bundleVersion: 1.1.3
   preloadedAssets:
   - {fileID: 11400000, guid: 376b90d8e4bc36847b168a3562608349, type: 2}
   metroInputSource: 0
@@ -293,7 +293,7 @@ PlayerSettings:
   - m_BuildTarget: Standalone
     m_Icons:
     - serializedVersion: 2
-      m_Icon: {fileID: 2800000, guid: bca162eb0237d6f4b99c87703abcf856, type: 3}
+      m_Icon: {fileID: 2800000, guid: ce7c6cbeb8a68cf45b7b183238bb7f08, type: 3}
       m_Width: 1024
       m_Height: 1024
       m_Kind: 0
@@ -335,7 +335,7 @@ PlayerSettings:
   - m_BuildTarget: 
     m_Icons:
     - serializedVersion: 2
-      m_Icon: {fileID: 2800000, guid: bca162eb0237d6f4b99c87703abcf856, type: 3}
+      m_Icon: {fileID: 0}
       m_Width: 128
       m_Height: 128
       m_Kind: 0
