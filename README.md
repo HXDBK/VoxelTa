@@ -52,7 +52,7 @@ The character interface is divided into 3 main sections. The leftmost is the cha
 **Character Avatar**: Avatar shown in the dialogue list.  
 **Character Name**: Character name displayed in the dialogue list.  
 **User Name**: User name displayed in the dialogue list.  
-**Character Setting***: [Important] This character's settings, including basic information like name, age, gender, background settings, reply rules, etc. The data filled here determines who your character is.  
+**Character Profile***: [Important] This character's settings, including basic information like name, age, gender, background settings, reply rules, etc. The data filled here determines who your character is.  
 **Memory**: The character's long-term memory (there's no functional difference between filling this here and directly in **Character Settings**, it's mainly for easier management).  
 
 #### Portrait Settings
@@ -87,7 +87,7 @@ For other settings interfaces if needed, please refer to:
 
 After returning to the dialogue interface, you can try sending your first message.  
 There are three modes below the dialogue interface:  
-**Dialogue Only**: Only displays dialogue text.  
+**Text Only**: Only displays dialogue text.  
 **Character Dialogue**: Displays the character with dialogue text shown on the left. Drag on the character to change position, scroll the wheel to change character size.  
 **Desktop Mode**: Displayed as a floating window. Drag on the character to change position, scroll the wheel to change character size, right-click and hold on the character to bring up the menu.  
 
@@ -103,10 +103,10 @@ There are three modes below the dialogue interface:
 [<img src="Images/pic14.png" width="500">](Images/pic14.png)
 
 Custom expressions have the following settings:  
-**Expression Recognition Identifier***: When this identifier appears in the character's reply, the character will make this expression until the next reply (supports regex).  
+**Expression Recognition Label***: When this identifier appears in the character's reply, the character will make this expression until the next reply (supports regex).  
 **Expression Name***: Name displayed in the expression list.  
-**Fade In Duration**: Fade-in duration when playing this expression.  
-**Fade Out Duration**: Fade-out duration when playing this expression.  
+**Fade-In Duration**: Fade-in duration when playing this expression.  
+**Fade-Out Duration**: Fade-out duration when playing this expression.  
 **Expression Parameter List***: After opening the custom expression interface, a **+** sign appears in the upper right corner of each parameter in the leftmost parameter list. After adjusting any parameter, click the **+** sign to add that parameter to the custom expression.  
 After configuration, click **Save Expression** to save the custom expression.  
 
@@ -117,14 +117,14 @@ In the settings interface, you can set the dialogue background (background won't
 **Hold Button Below to Scale Background**: Hold this button and drag to set background size.  
 **Background Color**: Set the color of solid background.  
 **Background Light**: Set the character's color to better blend the character with the background.  
-**Character Name Color**: The character's name color in the dialogue interface.  
+**Name Color**: The character's name color in the dialogue interface.  
 
 ### Use Text-to-Speech
 Currently, VoxelTa's text-to-speech only supports local API calls for [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS).  
 **Voice Module API**: Local API address for [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS).  
 **Reference Audio File Path**: File path for reference audio during generation. You can directly click the **folder** icon on the right to select.  
 **Reference Audio Text**: Text reference for the reference audio.  
-**Show Bubbles in Desktop Mode**: In desktop mode, if you only want to hear the voice, you can uncheck this option.  
+**Show Reply Bubbles in Desktop Mode**: In desktop mode, if you only want to hear the voice, you can uncheck this option.  
 
 ---
 

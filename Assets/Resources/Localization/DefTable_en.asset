@@ -135,8 +135,10 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 76857724559360
-    m_Localized: API URL <size=20>(Can be modified when Model Selection is set to
-      Custom)</size>
+    m_Localized: 'API URL <size=20>
+
+      (Can be modified when Model Selection
+      is set to Custom)</size>'
     m_Metadata:
       m_Items: []
   - m_Id: 77582932303872
@@ -144,8 +146,10 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 77689740255232
-    m_Localized: Rule Name \n<size=20>(Can be modified when Model Selection is set
-      to Custom)</size>
+    m_Localized: 'Rule Name
+
+      <size=20>(Can be modified when Model Selection
+      is set to Custom)</size>'
     m_Metadata:
       m_Items: []
   - m_Id: 78712194129920
