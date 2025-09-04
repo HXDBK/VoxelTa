@@ -66,7 +66,7 @@ public class Live2DModelLoader : MonoBehaviour
         if (!File.Exists(modelJsonPath))
         {
             Debug.LogError($"模型文件不存在: {modelJsonPath}");
-            MessageManager.instance.ShowMessage($"模型文件不存在: {modelJsonPath}", MessageType.Warning);
+            MessageManager.instance.ShowMessage($"Model file not found: {modelJsonPath}", MessageType.Warning);
             onComplete?.Invoke(null);
             yield break;
         }
@@ -90,8 +90,9 @@ public class Live2DModelLoader : MonoBehaviour
             controller = imgModel;
 
             // 加上简单 collider
-            var col = go.AddComponent<BoxCollider2D>();
-            col.isTrigger = true;
+            // var col = go.AddComponent<BoxCollider2D>();
+            // col.isTrigger = true;
+            go.tag = "Character";
 
             onComplete?.Invoke(controller);
             yield break;
@@ -122,6 +123,9 @@ public class Live2DModelLoader : MonoBehaviour
         {
             Debug.Log(_model.gameObject.name);  
             Destroy(_model.gameObject);
+        }else if (controller != null && controller.GetType() == typeof(ImageModel))
+        {
+            Destroy(controller.gameObject);
         }
     }
     

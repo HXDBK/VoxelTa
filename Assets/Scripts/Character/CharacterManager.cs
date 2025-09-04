@@ -46,8 +46,7 @@ namespace Character
         public Toggle isBreathToggle;
         public Toggle isBlinkToggle;
         public Toggle isLookMouseToggle;
-        public WButton detailBtn;
-        public WButton removeBtn;
+        public GameObject btns;
         
         //移动
         private Vector2 _moveOffset;
@@ -76,11 +75,7 @@ namespace Character
         public TMP_InputField parameterSearchInput;
         private readonly List<ModelParameter> _needSetDef = new (); 
         private static readonly NaturalSortComparer NaturalComparer = new NaturalSortComparer();
-        [Header("立绘动画")]
-        public MotionLine motionLinePeb;
-        [HideInInspector]
-        public List<MotionLine> motionLines = new();
-        public RectTransform motionLineParent;
+
         [Header("立绘表情")]
         [HideInInspector]
         public List<ModelExp> expPageItems = new();
@@ -251,9 +246,24 @@ namespace Character
                     Collider2D col = Physics2D.OverlapPoint(mouseWorldPos);
                     if (col && col.CompareTag("Character"))
                     {
-                        curModel.transform.localScale += Vector3.one * _scroll;
+                        float sensitivity = 0.1f;        // 调下灵敏度
+                        float factor = 1f + _scroll * sensitivity;
+
+                        // 避免 factor 过小或为负数导致翻转
+                        factor = Mathf.Clamp(factor, 0.5f, 1.5f);
+
+                        Vector3 newScale = curModel.transform.localScale * factor;
+
+                        // 统一按比例限制范围，防止太小或太大
+                        float minS = 0.05f;
+                        float maxS = 10f;
+                        float clamped = Mathf.Clamp(newScale.x, minS, maxS);
+                        newScale = Vector3.one * clamped;
+
+                        curModel.transform.localScale = newScale;
+
                         _scaleChanged = true;
-                        _scrollSaveTimer = 0f; // 重置保存计时器
+                        _scrollSaveTimer = 0f;
                     }
                 }
                 if (_scaleChanged)
@@ -265,21 +275,6 @@ namespace Character
                         _scaleChanged = false;
                     }
                 }
-            }
-            else if(curModel!=null && !curModel.isLookMouse)
-            {
-                // if (Input.GetMouseButtonDown(0))
-                // {
-                //     Vector2 mouseWorldPos = _camera!.ScreenToWorldPoint(Input.mousePosition);
-                //     Collider2D col = Physics2D.OverlapPoint(mouseWorldPos);
-                //     if (col && col.CompareTag("Character"))
-                //     {
-                //         curModel.dragController.StartDrag();
-                //     }
-                // }else if (Input.GetMouseButtonUp(0))
-                // {
-                //     curModel.dragController.EndDrag();
-                // }
             }
         }
 
@@ -309,30 +304,6 @@ namespace Character
         {
             if(curModel == null) return;
             var message = entry.content;
-            List<AnimationClip> matchedMotion = new List<AnimationClip>();
-            foreach (var item in motionLines)
-            {
-                if (!item.isOn.isOn){continue;}
-
-                var keyStr = item.motionNameInput.text;
-                try
-                {
-                    // 尝试将 pattern 作为正则表达式匹配 input
-                    if (Regex.IsMatch(message, keyStr))
-                    {
-                        matchedMotion.Add(item.Clip);
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    // pattern 不是有效正则，退而求其次使用普通字符串匹配
-                    if (message.Contains(keyStr))
-                    {
-                        matchedMotion.Add(item.Clip);
-                    }
-                }
-            }
-            PlayMotions(matchedMotion);
             curModel.ClearAllExpressions();
             foreach (var item in expPageItems)
             {
@@ -356,7 +327,6 @@ namespace Character
                     }
                 }
             }
-            PlayMotions(matchedMotion);
         }
 
         public void ShowPanel()
@@ -420,14 +390,20 @@ namespace Character
 
         public void ShowDetailPanel()
         {
-            detailPanel.Show();
-            UpdateModelShow();
+            if (curModel.GetType() == typeof(ImageModel))
+            {
+                MessageManager.instance.ShowMessage("图片类型的立绘无法设置参数");
+            }
+            else
+            {
+                detailPanel.Show();
+                UpdateModelShow();
+            }
         }
 
         public void HideDetailPanel()
         {
             SaveParameters();
-            SaveMotion();
             SaveExp();
             if (curModel)
             {
@@ -524,6 +500,7 @@ namespace Character
             }
             SaveData(false);
         }
+        
         #endregion
         #region ----------移动控制----------
         private void StartMoveFurniture()
@@ -579,6 +556,30 @@ namespace Character
         }
         #endregion
 
+        /// <summary>
+        /// 重置模型数据
+        /// </summary>
+        public void ResetScaleAndPos()
+        {
+            if (curCharacter.pos == Vector3.zero && curCharacter.scale == Vector3.one && curCharacter.deskPos == Vector3.zero && curCharacter.deskScale == Vector3.one)
+            {
+                return;
+            }
+            curCharacter.pos = Vector3.zero;
+            curCharacter.scale = Vector3.one;
+            curCharacter.deskPos = Vector3.zero;
+            curCharacter.deskScale = Vector3.one;
+
+            switch (LocalizerManager.GetCode())
+            {
+                case "zh-Hans":
+                    MessageManager.instance.ShowMessage("立绘模型和大小已重置");
+                    break;
+                case "en":
+                    MessageManager.instance.ShowMessage("Model and size have been reset");
+                    break;
+            }
+        }
         #endregion
         
         #region 角色相关
@@ -632,6 +633,7 @@ namespace Character
             var newData = target.Clone();
             newData.characterTitle += " 副本";
             characterDatas.Add(newData);
+            UpdateCharacterPanel();
             SetCurCharacter(newData);
             SetData();
         }
@@ -973,7 +975,7 @@ namespace Character
             float uiHeight = Vector3.Distance(corners[0], corners[1]); // y方向
 
             // 3. 获取模型的原始尺寸
-            var bounds = CalculateCubismModelBounds(curModel.modelData);
+            var bounds = curModel.GetBounds();
             float modelWidth = bounds.size.x;
             float modelHeight = bounds.size.y;
 
@@ -998,7 +1000,7 @@ namespace Character
             if (!curModel) return;
 
             // 获取包围盒（在模型的本地空间中）
-            var bounds = CalculateCubismModelBounds(curModel.modelData);
+            var bounds = curModel.GetBounds();;
             Vector3 localCenter = curModel.transform.InverseTransformPoint(bounds.center);
             Vector3 localSize = curModel.transform.InverseTransformVector(bounds.size);
             // 获取 BoxCollider2D，如果没有则添加
@@ -1039,8 +1041,7 @@ namespace Character
                     Destroy(curModel.gameObject);
                     curModel=null;
                 }
-                detailBtn.gameObject.SetActive(false);
-                removeBtn.gameObject.SetActive(false);
+                btns.gameObject.SetActive(false);
                 return;
             }
             if (characterPanel.isShow)
@@ -1052,8 +1053,7 @@ namespace Character
                         curModel.gameObject.SetActive(true);
                         FitModelToUI();
                         loadButton.gameObject.SetActive(false);
-                        detailBtn.gameObject.SetActive(true);
-                        removeBtn.gameObject.SetActive(true);
+                        btns.gameObject.SetActive(true);
                     }
                     else
                     {
@@ -1087,8 +1087,7 @@ namespace Character
                             loadButton.onPointerClick.RemoveAllListeners();
                             loadButton.onPointerClick.AddListener(SetLive2d);
                         }
-                        detailBtn.gameObject.SetActive(false);
-                        removeBtn.gameObject.SetActive(false);
+                        btns.gameObject.SetActive(false);
                     }
 
                 }else if (curCharacter.live2dPath is { Length: > 0 })
@@ -1105,8 +1104,7 @@ namespace Character
                     }
                     loadButton.onPointerClick.RemoveAllListeners();
                     loadButton.onPointerClick.AddListener(LoadLive2d);
-                    detailBtn.gameObject.SetActive(false);
-                    removeBtn.gameObject.SetActive(false);
+                    btns.gameObject.SetActive(false);
                 }
                 else
                 {
@@ -1122,8 +1120,7 @@ namespace Character
                     }
                     loadButton.onPointerClick.RemoveAllListeners();
                     loadButton.onPointerClick.AddListener(SetLive2d);
-                    detailBtn.gameObject.SetActive(false);
-                    removeBtn.gameObject.SetActive(false);
+                    btns.gameObject.SetActive(false);
                 }
             }
             else
@@ -1134,29 +1131,25 @@ namespace Character
                     {
                         curModel.gameObject.SetActive(true);
                         FitModelToWord();
-                        detailBtn.gameObject.SetActive(true);
-                        removeBtn.gameObject.SetActive(true);
+                        btns.gameObject.SetActive(true);
                     }
                     else if(curCharacter.live2dPath is { Length: > 0 })
                     {
                         LoadLive2d();
-                        detailBtn.gameObject.SetActive(true);
-                        removeBtn.gameObject.SetActive(true);
+                        btns.gameObject.SetActive(true);
                     }
                     else if(curModel != null)
                     {
                         Destroy(curModel.gameObject);
                         curModel=null;
-                        detailBtn.gameObject.SetActive(false);
-                        removeBtn.gameObject.SetActive(false);
+                        btns.gameObject.SetActive(false);
                     }
                 }
                 else if(curModel != null)
                 {
                     Destroy(curModel.gameObject);
                     curModel=null;
-                    detailBtn.gameObject.SetActive(true);
-                    removeBtn.gameObject.SetActive(true);
+                    btns.gameObject.SetActive(true);
                 }
             }
         }
@@ -1207,60 +1200,13 @@ namespace Character
         {
             if (!curCharacter.SettingData.ttsIson && curModel != null && curModel.characterData == curCharacter)
             {
-                curModel.mouthController.FakeTalk(3);
+                curModel.FakeTalk(3);
             }
         }
         #endregion
         
         #region 动画/表情相关
-
-        /// <summary>
-        /// 设置动画列表
-        /// </summary>
-        private void SetMotionValue()
-        {
-            var motions = live2DModelLoader.clips.Values.ToArray();
-
-            for (var i = 0; i < motions.Length; i++)
-            {
-                if (i < motionLines.Count)
-                {
-                    motionLines[i].SetData(motions[i]);
-                    motionLines[i].gameObject.SetActive(true);
-                }
-                else
-                {
-                    var newLine = Instantiate(motionLinePeb, motionLineParent);
-                    newLine.SetData(motions[i]);
-                    motionLines.Add(newLine);
-                }
-
-                foreach (var modelMotion in curCharacter.modelMotions)
-                {
-                    if (modelMotion.motionName == motions[i].name)
-                    {
-                        motionLines[i].SetData(modelMotion);
-                    }
-                }
-            }
-
-            for (int i = motions.Length; i < motionLines.Count; i++)
-            {
-                motionLines[i].gameObject.SetActive(false);
-            }
-        }
         
-        /// <summary>
-        /// 保存动作
-        /// </summary>
-        private void SaveMotion()
-        {
-            curCharacter.modelMotions.Clear();
-            foreach (var motion in motionLines)
-            {
-                curCharacter.modelMotions.Add(motion.GetMotionData());
-            }
-        }
         /// <summary>
         /// 设置表情列表
         /// </summary>
@@ -1615,6 +1561,11 @@ namespace Character
         private void SetParametersValue()
         {
             parameterSearchInput.text = "";
+            if (curModel.modelData == null)
+            {
+                parameterPageItems.Clear();
+                return;
+            }
             var parameters = curModel.modelData.Parameters;
             var savedParamDict = curModel.characterData.modelParameters
                 .ToDictionary(p => p.parameterId);

@@ -467,6 +467,11 @@ namespace WUI
             return _lineList;
         }
 
+        public PageLineItem GetLastItem()
+        {
+            return _lineList[^1];
+        }
+
         public void Clear()
         {
             foreach (var lineItem in _lineList)

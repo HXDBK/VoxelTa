@@ -26,6 +26,10 @@ public class MessageManager : MonoBehaviour
     public Sprite warningSprite;
     public Sprite successSprite;
     
+    [Header("小提示")]
+    public RectTransform littleTip;
+    public TMP_Text littleTipText;
+    
     private Tween _hideTween;
 
     private void Awake()
@@ -81,6 +85,20 @@ public class MessageManager : MonoBehaviour
             propUpPanel.Hide();
         });
         propUpPanel.Show();
+    }
+    public void ShowLittleTip(string msg,Vector3 pos)
+    {
+        if(littleTip ==null){return;}
+        littleTipText.text = msg;
+        littleTipText.rectTransform.sizeDelta = new Vector2(msg.Length*20, littleTipText.rectTransform.sizeDelta.y);
+        littleTip.sizeDelta = new Vector2(msg.Length*20+20, littleTipText.rectTransform.sizeDelta.y);
+        littleTip.transform.position = pos;
+        littleTip.gameObject.SetActive(true);
+    }
+    public void HideLittleTip()
+    {
+        if(littleTip ==null){return;}
+        littleTip.gameObject.SetActive(false);
     }
     public void ShowMessage(string message, MessageType messageType = MessageType.Info)
     {

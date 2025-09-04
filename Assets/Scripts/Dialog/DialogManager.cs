@@ -1,11 +1,17 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Character;
 using DG.Tweening;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Setting;
 using TMPro;
 using TTS;
@@ -31,7 +37,8 @@ namespace Dialog
         public Image submitButtonIcon;
         public WButton clearButton;
         public UIPanel dialogPanel;
-        public Sprite loadSprite, submitSprite;
+        public GameObject loadingIcon;
+        public GameObject easyLoadingIcon;
         
         public TMP_InputField easyMessageInput;
         public UIPanel easyMessagePanel;
@@ -43,10 +50,20 @@ namespace Dialog
         private Vector3 _shift;
         private Tween _delayedCallTween;
         
+        // 流式相关
+        private static readonly HttpClient SHttp = new HttpClient(new HttpClientHandler {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        }) { Timeout = TimeSpan.FromMinutes(10) };
+        private volatile bool _streamComplete;
+        private volatile bool _streamSuccess;
+        private string _streamError;
+        
         public WScrollList scrollList;
         //声音
         public DialogueEntry hasAudioEntry;
         private TalkData CurTalkData => CharacterManager.instance.curCharacter.talkData;
+        public event Action OnSendMessage;
+        public event Action OnGetMessage;
         public event Action<DialogueEntry> OnMessageReceived;
         private void Awake()
         {
@@ -158,9 +175,18 @@ namespace Dialog
                 MessageManager.instance.ShowMessage("请完善模型接口信息",MessageType.Warning);
                 return;
             }
-            submitButtonIcon.sprite = loadSprite;
+            submitButtonIcon.gameObject.SetActive(false);
+            loadingIcon.SetActive(true);
 
-            StartCoroutine(SendWebMessage());
+            OnSendMessage?.Invoke();
+            if (_characterManager.curCharacter.SettingData.isTextStreaming)
+            {
+                StartCoroutine(SendWebMessageStream());
+            }
+            else
+            {
+                StartCoroutine(SendWebMessage());
+            }
         }
         /// <summary>
         /// 桌面模式下的提交
@@ -189,8 +215,17 @@ namespace Dialog
                 return;
             }
             easyDialogAudioPlay.SetActive(false);
-            easySubmitButtonIcon.sprite = loadSprite;
-            StartCoroutine(EasySendWebMessage());
+            easySubmitButtonIcon.gameObject.SetActive(false);
+            easyLoadingIcon.SetActive(true);
+           
+            if (_characterManager.curCharacter.SettingData.isTextStreaming)
+            {
+                StartCoroutine(SendWebMessageStream());
+            }
+            else
+            {
+                StartCoroutine(EasySendWebMessage());
+            }
         }
         private void Clear()
         {
@@ -218,6 +253,7 @@ namespace Dialog
             scrollList.SetData(trimmedHistory);
             scrollList.ScrollToBottom();
         }
+        
         private void OnGetAudio(AudioClip target,DialogueEntry entry)
         {
             hasAudioEntry = entry;
@@ -275,7 +311,9 @@ namespace Dialog
                     //添加回复消息
                     CurTalkData.AddDialogue(entry);
                     OnMessageReceived?.Invoke(entry);
-                    submitButtonIcon.sprite = submitSprite;
+                    OnGetMessage?.Invoke();
+                    submitButtonIcon.gameObject.SetActive(true);
+                    loadingIcon.SetActive(false);
                     UpdateDialogPanel();
                     GameManager.instance.SaveData();
                 }
@@ -283,7 +321,9 @@ namespace Dialog
                 {
                     userMessageEnty.getRequest = false;
                     Debug.LogError("网络请求错误：" + request.error + "\n响应内容：" + request.downloadHandler.text);
-                    submitButtonIcon.sprite = submitSprite;
+                    OnGetMessage?.Invoke();
+                    submitButtonIcon.gameObject.SetActive(true);
+                    loadingIcon.SetActive(false);
                 }
             }
 
@@ -291,6 +331,188 @@ namespace Dialog
             submitButton.Interactable = true;
             userMessageInput.text = "";
             userMessageInput.ActivateInputField();
+        }
+        /// <summary>
+        /// 流式处理信息
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator SendWebMessageStream()
+        {
+            submitButton.Interactable = false;
+            userMessageInput.interactable = false;
+            easyMessageInput.interactable = false;
+            easySubmitButton.Interactable = false;
+            
+            var userMessage = GameManager.instance.CurMode != GameMode.Desktop?userMessageInput.text.TrimEnd('\n'):easyMessageInput.text.TrimEnd('\n');
+            var userMessageEntry = new DialogueEntry { role = "user", content = userMessage, time = DateTime.Now };
+            CurTalkData.AddDialogue(userMessageEntry);
+            if (GameManager.instance.CurMode != GameMode.Desktop)
+            {
+                UpdateDialogPanel();
+            }
+
+            // 1) 先准备要发给模型的历史，过滤掉空 assistant
+            var outboundMessages = CurTalkData.GetMessages()
+                .FindAll(m => !(m.role == "assistant" && string.IsNullOrEmpty(m.content)));
+
+            // 2) 再加一个 UI 占位的 assistant
+            var assistantEntry = new DialogueEntry { role = "assistant", content = "", think = "", time = DateTime.Now };
+            CurTalkData.AddDialogue(assistantEntry);
+
+            // 3) 组包（把 outboundMessages 传进去）
+            string jsonBody = GetJsonRequest(true, outboundMessages);
+
+            yield return StartCoroutine(StreamRequest(jsonBody, assistantEntry, userMessageEntry));
+
+            userMessageInput.interactable = true;
+            submitButton.Interactable = true;
+            easyMessageInput.interactable = true;
+            easySubmitButton.Interactable = true;
+            easySubmitButtonIcon.gameObject.SetActive(true);
+            easyLoadingIcon.SetActive(false);
+            userMessageInput.text = "";
+            userMessageInput.ActivateInputField();
+            GameManager.instance.SaveData();
+        }
+        /// <summary>
+        /// 流式请求协程
+        /// </summary>
+        /// <param name="jsonBody"></param>
+        /// <param name="assistantEntry"></param>
+        /// <param name="userMessageEntry"></param>
+        /// <returns></returns>
+        /// <exception cref="HttpRequestException"></exception>
+        IEnumerator StreamRequest(string jsonBody, DialogueEntry assistantEntry, DialogueEntry userMessageEntry)
+        {
+            _streamComplete = false;
+            _streamSuccess  = false;
+            _streamError    = null;
+
+            var deltas = new ConcurrentQueue<(string text, string reasoning)>();
+            var cts = new System.Threading.CancellationTokenSource();
+
+            var task = Task.Run(async () =>
+            {
+                try
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Post, CharacterManager.instance.curCharacter.SettingData.apiUrl);
+                    req.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+                    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", CharacterManager.instance.curCharacter.SettingData.apiKey);
+                    req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+                    using var resp = await SHttp.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+                    var bodyStream = await resp.Content.ReadAsStreamAsync();
+
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        // 尽量把错误体也读出来
+                        string err = "";
+                        try { err = await resp.Content.ReadAsStringAsync(); } catch { /* ignore */ }
+                        throw new HttpRequestException($"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}: {err}");
+                    }
+
+                    using var reader = new System.IO.StreamReader(bodyStream, Encoding.UTF8);
+                    while (!reader.EndOfStream && !cts.IsCancellationRequested)
+                    {
+                        var line = await reader.ReadLineAsync();
+                        if (string.IsNullOrEmpty(line)) continue;
+                        if (!line.StartsWith("data:")) continue;
+
+                        var data = line.Substring(5).Trim();
+                        if (data == "[DONE]") break;
+
+                        try
+                        {
+                            var chunk = JObject.Parse(data);
+                            var delta = chunk["choices"]?[0]?["delta"];
+                            var content = delta?["content"]?.ToString();
+                            var reasoning = delta?["reasoning_content"]?.ToString();
+                            if (!string.IsNullOrEmpty(content) || !string.IsNullOrEmpty(reasoning))
+                                deltas.Enqueue((content ?? "", reasoning ?? ""));
+
+                            // finish_reason 非空即收尾（stop/length 等）
+                            var fr = chunk["choices"]?[0]?["finish_reason"]?.ToString();
+                            if (!string.IsNullOrEmpty(fr)) break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogWarning("Parse SSE chunk error: " + ex.Message);
+                        }
+                    }
+
+                    _streamSuccess = true;
+                }
+                catch (Exception e)
+                {
+                    _streamError = e.Message;
+                    Debug.LogError("Stream request failed: " + e);
+                }
+                finally { _streamComplete = true; }
+            }, cts.Token);
+
+            // 主线程：仅在 deque 到新字时更新最后一条，避免整个列表重绘
+            float tick = 0f;
+            const float uiInterval = 0.5f;
+            bool changed = false;
+
+            while (!_streamComplete)
+            {
+                while (deltas.TryDequeue(out var d))
+                {
+                    if (!string.IsNullOrEmpty(d.text))
+                    {
+                        assistantEntry.content += d.text;
+                    }
+
+                    if (!string.IsNullOrEmpty(d.reasoning))
+                    {
+                        assistantEntry.think += d.reasoning;
+                    }
+                    changed = true;
+                }
+
+                tick += Time.deltaTime;
+                if (changed && tick >= uiInterval)
+                {
+                    tick = 0f; changed = false;
+                    // 只刷新最后一条（自己封装个 UpdateLastLine 更省）
+                    if (GameManager.instance.CurMode != GameMode.Desktop)
+                    {
+                        UpdateDialogPanel();
+                    }
+                    else
+                    {
+                        SetEasyDialogPanelSize(assistantEntry.content);
+                    }
+                }
+
+                yield return null;
+            }
+
+            // 拉干队列 + 最终一次刷新
+            while (deltas.TryDequeue(out var d2))
+            {
+                if (!string.IsNullOrEmpty(d2.text)) assistantEntry.content += d2.text;
+                if (!string.IsNullOrEmpty(d2.reasoning)) assistantEntry.think += d2.reasoning;
+            }
+            UpdateDialogPanel();
+
+            if (_streamSuccess)
+            {
+                userMessageEntry.getRequest = true;
+                assistantEntry.getRequest = true;
+                submitButtonIcon.gameObject.SetActive(true);
+                loadingIcon.SetActive(false);
+                OnMessageReceived?.Invoke(assistantEntry);
+                OnGetMessage?.Invoke();
+            }
+            else
+            {
+                userMessageEntry.getRequest = false;
+                assistantEntry.content = $"请求失败：{_streamError}";
+                submitButtonIcon.gameObject.SetActive(true);
+                loadingIcon.SetActive(false);
+            }
         }
         /// <summary>
         /// 桌面模式发送消息并更新历史
@@ -315,7 +537,6 @@ namespace Dialog
             CurTalkData.AddDialogue(userMessageEnty);
             UpdateDialogPanel();
             string jsonBody = GetJsonRequest();
-            Debug.Log(jsonBody);
             using (UnityWebRequest request = new UnityWebRequest(CharacterManager.instance.curCharacter.SettingData.apiUrl, "POST"))
             {
                 byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
@@ -342,11 +563,10 @@ namespace Dialog
                     //添加回复消息
                     CurTalkData.AddDialogue(entry);
                     OnMessageReceived?.Invoke(entry);
-                    if (!_characterManager.curCharacter.SettingData.isHideDiagOnDesk)
-                    {
-                        easyDialogPanel.Show();
-                    }
-                    easySubmitButtonIcon.sprite = submitSprite;
+                    OnGetMessage?.Invoke();
+
+                    easySubmitButtonIcon.gameObject.SetActive(true);
+                    easyLoadingIcon.SetActive(false);
                     SetEasyDialogPanelSize(modelReply);
                     _delayedCallTween?.Kill();
                     _delayedCallTween = DOVirtual.DelayedCall(0.3f*modelReply.Length, () =>
@@ -359,7 +579,8 @@ namespace Dialog
                 {
                     userMessageEnty.getRequest = false;
                     Debug.LogError("网络请求错误：" + request.error + "\n响应内容：" + request.downloadHandler.text);
-                    easySubmitButtonIcon.sprite = submitSprite;
+                    easySubmitButtonIcon.gameObject.SetActive(true);
+                    easyLoadingIcon.SetActive(false);
                 }
             }
 
@@ -374,6 +595,10 @@ namespace Dialog
 
         void SetEasyDialogPanelSize(string content)
         {
+            if (!_characterManager.curCharacter.SettingData.isHideDiagOnDesk && !easyDialogPanel.isShow)
+            {
+                easyDialogPanel.Show();
+            }
             easyDialogText.text = ConvertMarkdownToTMP(content);
 
             // 每个字符估算宽度（你可以根据字体调整）
@@ -407,58 +632,30 @@ namespace Dialog
         /// 根据历史数据构建json
         /// </summary>
         /// <returns></returns>
-        private string GetJsonRequest()
+        private string GetJsonRequest(bool isStream = false, List<Message> messagesOverride = null)
         {
-            // 构建系统指令
-            var systemInstructionBuilder = new StringBuilder();
-            
-            systemInstructionBuilder.Append(_characterManager.curCharacter.characterDescription);
-            Debug.Log(_characterManager.curCharacter.characterDescription);
-            // if (!string.IsNullOrEmpty(_characterManager.curCharacter.userName))
-            // {
-            //     systemInstructionBuilder.Append($"请称呼用户为{_characterManager.curCharacter.userName}。");
-            // }
-            // if (!string.IsNullOrEmpty(_characterManager.curCharacter.characterName))
-            // {
-            //     systemInstructionBuilder.Append($"你将被称为{_characterManager.curCharacter.userName}。");
-            // }
-            // 添加表情信息
-            // systemInstructionBuilder.Append(_characterManager.GetCharacterModelStr());
-            // 添加记忆内容
+            // system 指令
+            var sys = new StringBuilder();
+            sys.Append(_characterManager.curCharacter.characterDescription);
             if (_characterManager.curCharacter.HasMemory)
             {
-                switch (LocalizerManager.GetCode())
-                {
-                    case "zh-Hans":
-                        systemInstructionBuilder.Append("以下是你的一些重要记忆：");
-                        break;
-                    case "en":
-                        systemInstructionBuilder.Append("Here are some important memories for you:");
-                        break;
-                }
-                systemInstructionBuilder.Append(_characterManager.curCharacter.GetMemorise());
+                sys.Append(LocalizerManager.GetCode() == "en" ? "Here are some important memories for you:" : "以下是你的一些重要记忆：");
+                sys.Append(_characterManager.curCharacter.GetMemorise());
             }
-            
-            string systemInstruction = systemInstructionBuilder.ToString();
 
-            // 用于生成请求体的消息列表
-            List<Message> messages = new List<Message>();
-            if (systemInstruction.Length>0)
-            {
-                messages.Add(new() {
-                    role = CharacterManager.instance.curCharacter.SettingData.roleName,
-                    content = systemInstruction,
-                } );
-            }        
-            var talkMessages = CurTalkData.GetMessages();
-            messages.AddRange(talkMessages);
-            // 利用对象序列化生成最终 JSON 字符串
-            var requestBody = new
-            {
-                model = CharacterManager.instance.curCharacter.SettingData.modelName, messages
-            };
+            var messages = messagesOverride ?? CurTalkData.GetMessages();
+            var final = new List<Message>();
 
-            return JsonConvert.SerializeObject(requestBody);
+            if (sys.Length > 0)
+                final.Add(new Message { role = _characterManager.curCharacter.settingData.roleName, content = sys.ToString() }); // 固定 system
+
+            // 过滤掉空 assistant
+            foreach (var m in messages)
+                if (!(m.role == "assistant" && string.IsNullOrEmpty(m.content)))
+                    final.Add(m);
+
+            var body = new { model = CharacterManager.instance.curCharacter.SettingData.modelName, messages = final, stream = isStream };
+            return JsonConvert.SerializeObject(body);
         }
         /// <summary>
         /// 从响应中提取模型的回复
@@ -609,7 +806,6 @@ namespace Dialog
             if (CurTalkData.dialogueEntries.Count > 0 && CurTalkData.dialogueEntries[^1].role == "assistant")
             {
                 easyDialogText.text = ConvertMarkdownToTMP(CurTalkData.dialogueEntries[^1].content);
-                Debug.Log(easyDialogText.text);
                 SetEasyDialogPanelSize(CurTalkData.dialogueEntries[^1].content);
                 _delayedCallTween?.Kill();
                 _delayedCallTween = DOVirtual.DelayedCall(0.1f * CurTalkData.dialogueEntries[^1].content.Length, () =>

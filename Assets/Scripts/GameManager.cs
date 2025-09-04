@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Character;
 using DG.Tweening;
+using Dialog;
 using Newtonsoft.Json;
 using TMPro;
 using UnityEngine;
@@ -43,6 +44,10 @@ public class GameManager : MonoBehaviour
             StartCoroutine(ChangeModeIE());
         }
         CharacterManager.instance.OnHideCharacterPanel += SetModeAsCurCharacter;
+        DialogManager.instance.OnSendMessage -= OnSendMessage;
+        DialogManager.instance.OnGetMessage -= OnGetMessage;
+        DialogManager.instance.OnSendMessage += OnSendMessage;
+        DialogManager.instance.OnGetMessage += OnGetMessage;
     }
 
     IEnumerator ChangeModeIE()
@@ -60,7 +65,15 @@ public class GameManager : MonoBehaviour
         ES3.Save("characterDatas",CharacterManager.instance.characterDatas);
         Debug.Log($"============SaveSettingData==============");
     }
-    
+    private void OnSendMessage()
+    {
+        modeDropdown.interactable = false;
+    }
+
+    private void OnGetMessage()
+    {
+        modeDropdown.interactable = true;
+    }
     /// <summary>
     /// 改变对话模式
     /// </summary>
@@ -134,14 +147,30 @@ public class GameManager : MonoBehaviour
                 else
                 {
                     Debug.LogWarning("加载图片失败：" + path);
-                    MessageManager.instance.ShowMessage("加载图片失败：" + path,MessageType.Warning);
+                    switch (LocalizerManager.GetCode())
+                    {
+                        case "zh-Hans":
+                            MessageManager.instance.ShowMessage("加载图片失败：" + path,MessageType.Warning);
+                            break;
+                        case "en":
+                            MessageManager.instance.ShowMessage("Failed to load image:" + path,MessageType.Warning);
+                            break;
+                    }
                     target.sprite = defaultSprite;
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError("读取图片文件异常：" + ex.Message);
-                MessageManager.instance.ShowMessage("读取图片文件异常：" + ex.Message,MessageType.Warning);
+                switch (LocalizerManager.GetCode())
+                {
+                    case "zh-Hans":
+                        MessageManager.instance.ShowMessage("加载图片失败：" + ex.Message,MessageType.Warning);
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowMessage($"Failed to load image: ", MessageType.Warning);
+                        break;
+                }
                 target.sprite = defaultSprite;
             }
         }
@@ -151,18 +180,27 @@ public class GameManager : MonoBehaviour
             target.color = Color.white;
         }
     }
-    public void SetWindowed()
+
+    private void SetWindowed()
     {
         transparentWindow.DisableTransparentMode();
         Screen.SetResolution(_windowSize.x, _windowSize.y, FullScreenMode.Windowed);
         Debug.Log("切换到窗口模式");
     }
-    public void SetFullScreenWindow()
+
+    private void SetFullScreenWindow()
     {
         _windowSize = new Vector2Int(Screen.width, Screen.height);
         transparentWindow.EnableTransparentMode();
         Screen.SetResolution(Display.main.systemWidth, Display.main.systemHeight, FullScreenMode.FullScreenWindow);
         Debug.Log("切换到窗口全屏模式");
+    }
+    private void OnDestroy()
+    {
+        DialogManager.instance.OnSendMessage -= OnSendMessage;
+        DialogManager.instance.OnGetMessage -= OnGetMessage;
+        DOTween.KillAll();
+        DOTween.Clear();
     }
 }
 

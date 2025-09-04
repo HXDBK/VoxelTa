@@ -46,6 +46,8 @@ public class LocalizerManager : MonoBehaviour
     new LocalizationItem { key = "请选择一个背景", enValue = "Please select a background" },
     new LocalizationItem { key = "保存成功", enValue = "Saved successfully" },
     new LocalizationItem { key = "保存失败", enValue = "Save failed" },
+    new LocalizationItem { key = "图片类型的立绘无法设置参数", enValue = "Parameters cannot be set for image-type character illustrations" },
+    new LocalizationItem { key = "音频加载失败", enValue = "Failed to load audio" },
     new LocalizationItem { key = "语音播放失败", enValue = "Voice playback failed" }
 };
 

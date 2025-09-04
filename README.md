@@ -53,7 +53,7 @@ The character interface is divided into 3 main sections. The leftmost is the cha
 **Character Name**: Character name displayed in the dialogue list.  
 **User Name**: User name displayed in the dialogue list.  
 **Character Profile***: [Important] This character's settings, including basic information like name, age, gender, background settings, reply rules, etc. The data filled here determines who your character is.  
-**Memory**: The character's long-term memory (there's no functional difference between filling this here and directly in **Character Settings**, it's mainly for easier management).  
+**Memory**: The character's long-term memory (there's no functional difference between filling this here and directly in **Character Settings**, it's mainly for easier management).
 
 #### Portrait Settings
 If you haven't set a Live2D model for the current character, click this area to select a Live2D model for your character. You need to select the file ending with .model3.json in the Live2D files. If there are no issues, your Live2D model will be loaded.
@@ -75,6 +75,7 @@ To chat with your companion, you need to set up a large language model for the c
 **Rule Name**: Only needed when selecting custom, the name used when sending system rules.  
 **API Key**: (Important) This input field requires your obtained API key for the model.  
 **Maximum Characters**: Limits the maximum context character count. Dialogues exceeding this character count will be truncated.  
+**Stream Mode Reply**: Generate and output simultaneously, faster reply speed (currently only supports DeepSeek and OpenAI interfaces).
 
 After configuration, please click the save button in the upper right corner and close the dialogue settings page.  
 For other settings interfaces if needed, please refer to:  
@@ -89,7 +90,7 @@ After returning to the dialogue interface, you can try sending your first messag
 There are three modes below the dialogue interface:  
 **Text Only**: Only displays dialogue text.  
 **Character Dialogue**: Displays the character with dialogue text shown on the left. Drag on the character to change position, scroll the wheel to change character size.  
-**Desktop Mode**: Displayed as a floating window. Drag on the character to change position, scroll the wheel to change character size, right-click and hold on the character to bring up the menu.  
+**Desktop Mode**: Displayed as a floating window. Drag on the character to change position, scroll the wheel to change character size, right-click and hold on the character to bring up the menu.
 
 ### Portrait Settings and Custom Expressions
 
@@ -98,7 +99,7 @@ There are three modes below the dialogue interface:
 **Model Parameter Adjustment**: All parameters of your Live2D model will be displayed on the left side of the interface. You can directly adjust these parameters to modify the Live2D model's appearance.  
 **Model Auto Behaviors**: You can enable or disable some automatic behaviors of the model, including breathing, blinking, and mouse tracking.  
 **Model Expressions**: The far right side of the interface shows all expressions owned by this model (some models come with expressions).  
-**Custom Expressions**: You can add your custom expressions through the **+** button in the upper right corner of the interface.  
+**Custom Expressions**: You can add your custom expressions through the **+** button in the upper right corner of the interface.
 
 [<img src="Images/pic14.png" width="500">](Images/pic14.png)
 
@@ -108,7 +109,7 @@ Custom expressions have the following settings:
 **Fade-In Duration**: Fade-in duration when playing this expression.  
 **Fade-Out Duration**: Fade-out duration when playing this expression.  
 **Expression Parameter List***: After opening the custom expression interface, a **+** sign appears in the upper right corner of each parameter in the leftmost parameter list. After adjusting any parameter, click the **+** sign to add that parameter to the custom expression.  
-After configuration, click **Save Expression** to save the custom expression.  
+After configuration, click **Save Expression** to save the custom expression.
 
 ### Set Background Image
 In the settings interface, you can set the dialogue background (background won't be displayed in desktop mode).  
@@ -117,14 +118,25 @@ In the settings interface, you can set the dialogue background (background won't
 **Hold Button Below to Scale Background**: Hold this button and drag to set background size.  
 **Background Color**: Set the color of solid background.  
 **Background Light**: Set the character's color to better blend the character with the background.  
-**Name Color**: The character's name color in the dialogue interface.  
+**Name Color**: The character's name color in the dialogue interface.
 
 ### Use Text-to-Speech
 Currently, VoxelTa's text-to-speech only supports local API calls for [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS).  
 **Voice Module API**: Local API address for [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS).  
 **Reference Audio File Path**: File path for reference audio during generation. You can directly click the **folder** icon on the right to select.  
 **Reference Audio Text**: Text reference for the reference audio.  
-**Show Reply Bubbles in Desktop Mode**: In desktop mode, if you only want to hear the voice, you can uncheck this option.  
+**Stream Mode Voice Conversion**: Generate and play simultaneously, faster generation speed.  
+**Only Keep Quoted Content**: Generate voice only for content within quotation marks in the reply.  
+**Remove Bracketed Content**: Don't generate content wrapped in brackets in the reply.  
+**Show Reply Bubbles in Desktop Mode**: In desktop mode, if you only want to hear the voice, you can uncheck this option.
+
+## 🆕 Recent Updates
+- ## **v1.2.0** (2025-09-03 Update)
+    - New: Support for image portraits
+    - New: Support for TTS stream mode generation
+    - New: Support for DeepSeek stream mode calls
+    - Optimization: Some UI interaction optimizations
+    - Fix: Some bugs
 
 ---
 
@@ -135,8 +147,8 @@ If you want to modify the project or participate in development, please follow t
 
 - **Unity Version**: 2022.3.x LTS
 - **Supported Platforms**:
-  - Windows (full functionality, including desktop mode)
-  
+    - Windows (full functionality, including desktop mode)
+
 ## Required Plugins
 
 This project depends on the following third-party plugins, which you need to manually download and import:

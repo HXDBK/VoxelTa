@@ -213,11 +213,11 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 91285157240832
-    m_Localized: Windowed Mode
+    m_Localized: Windowed
     m_Metadata:
       m_Items: []
   - m_Id: 91491743490048
-    m_Localized: Replay Reply
+    m_Localized: Replay
     m_Metadata:
       m_Items: []
   - m_Id: 91851178565632
@@ -314,6 +314,52 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 723777849581568
     m_Localized: View Error Log
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1339433322209280
+    m_Localized: Chinese
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1339484945702912
+    m_Localized: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1339537034764288
+    m_Localized: Japanese
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1340707480461312
+    m_Localized: Reference Voice Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1341022384611328
+    m_Localized: Target Voice Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1342124333129728
+    m_Localized: 'Streaming Voice Conversion
+
+      <size=20>(Convert and play simultaneously,
+      lower latency)</size>'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1768816625246208
+    m_Localized: Remove the content in parentheses
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1769695566815232
+    m_Localized: Keep only the content in quotation marks
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2070982837592064
+    m_Localized: 'Streaming Reply
+
+      <size=20>(Reply while generating, faster
+      responses)</size>'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2547037079789568
+    m_Localized: Gemini and Custom Models do not support streaming mode for now
     m_Metadata:
       m_Items: []
   references:

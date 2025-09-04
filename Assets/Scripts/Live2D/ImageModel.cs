@@ -77,6 +77,12 @@ namespace Live2D
 
         public override void Start() { /* 空实现：不需要队列或动画控制 */ }
         public override void Update() { /* 空实现：不需要轮询 */ }
+        public override Bounds GetBounds()
+        {
+            if (spriteRenderer == null || spriteRenderer.sprite == null)
+                return new Bounds(Vector3.zero, Vector3.zero);
+            return spriteRenderer.bounds;
+        }
 
         // —— 基类公共接口的安全空实现 —— //
         public override void PlayMotion(AnimationClip target) { /* no-op */ }
@@ -108,6 +114,8 @@ namespace Live2D
         public override void SetExpression(Live2D.Cubism.Framework.Json.CubismExp3Json _json) { /* no-op */ }
         public override void CancelExpression(Live2D.Cubism.Framework.Json.CubismExp3Json _json) { /* no-op */ }
         public override void ClearAllExpressions() { /* no-op */ }
+
+        public override void FakeTalk(float duration) {/* no-op */ }
 
         // —— 便捷：运行时换图 —— //
         public void SetSprite(Sprite newSprite, bool autoFitCollider = true)

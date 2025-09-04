@@ -316,6 +316,27 @@ namespace Live2D
                 render.Color = target;
             }
         }
+
+        public virtual Bounds GetBounds()
+        {
+            var drawables = modelData.Drawables;
+            if (drawables == null || drawables.Length == 0)
+                return new Bounds(Vector3.zero, Vector3.zero);
+
+            Bounds combinedBounds = drawables[0].GetComponent<MeshRenderer>().bounds;
+
+            for (int i = 1; i < drawables.Length; i++)
+            {
+                combinedBounds.Encapsulate(drawables[i].GetComponent<MeshRenderer>().bounds);
+            }
+
+            return combinedBounds;
+        }
+
+        public virtual void FakeTalk(float duration)
+        {
+            mouthController.FakeTalk(duration);
+        }
         [Serializable]
         public class ExpressionState
         {

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1238813479956233997}
   - component: {fileID: 1990558157446166196}
   - component: {fileID: 2255964127901853272}
+  - component: {fileID: 5792459691389711616}
   m_Layer: 5
   m_Name: "\u5BFC\u51FA"
   m_TagString: Untagged
@@ -117,6 +118,21 @@ MonoBehaviour:
   selectedImage: {fileID: 0}
   selectedColor: {r: 0.6, g: 0.8, b: 0.4, a: 1}
   _interactable: 1
+--- !u!114 &5792459691389711616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 214347335611540845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ca0f2357bde64942bcf3a0915474faf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tip: "\u5BFC\u51FA\u89D2\u8272"
+  offset: {x: 0, y: -0.24, z: 0}
+  isShow: 0
 --- !u!1 &537046825580543744
 GameObject:
   m_ObjectHideFlags: 0
@@ -129,6 +145,7 @@ GameObject:
   - component: {fileID: 4932319700235725715}
   - component: {fileID: 821314648930634735}
   - component: {fileID: 436646895395766760}
+  - component: {fileID: 9112246341294344183}
   m_Layer: 5
   m_Name: "\u590D\u5236"
   m_TagString: Untagged
@@ -234,6 +251,21 @@ MonoBehaviour:
   selectedImage: {fileID: 0}
   selectedColor: {r: 0.6, g: 0.8, b: 0.4, a: 1}
   _interactable: 1
+--- !u!114 &9112246341294344183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 537046825580543744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ca0f2357bde64942bcf3a0915474faf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tip: "\u590D\u5236\u89D2\u8272"
+  offset: {x: 0, y: -0.24, z: 0}
+  isShow: 0
 --- !u!1 &1206029315922335246
 GameObject:
   m_ObjectHideFlags: 0
@@ -1332,6 +1364,7 @@ GameObject:
   - component: {fileID: 4165668670832778776}
   - component: {fileID: 2250791784111962604}
   - component: {fileID: 1278184293472653094}
+  - component: {fileID: 4799301926630353408}
   m_Layer: 5
   m_Name: "\u5220\u9664"
   m_TagString: Untagged
@@ -1437,3 +1470,18 @@ MonoBehaviour:
   selectedImage: {fileID: 0}
   selectedColor: {r: 0.6, g: 0.8, b: 0.4, a: 1}
   _interactable: 1
+--- !u!114 &4799301926630353408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8358865419477554208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ca0f2357bde64942bcf3a0915474faf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tip: "\u5220\u9664\u89D2\u8272"
+  offset: {x: 0, y: -0.24, z: 0}
+  isShow: 0

@@ -763,6 +763,7 @@ GameObject:
   - component: {fileID: 4119120680801537925}
   - component: {fileID: 7232857960649185759}
   - component: {fileID: 462176608555861058}
+  - component: {fileID: 1674847758235277360}
   m_Layer: 5
   m_Name: "\u64A4\u9500"
   m_TagString: Untagged
@@ -868,6 +869,21 @@ MonoBehaviour:
   selectedImage: {fileID: 0}
   selectedColor: {r: 0.6, g: 0.8, b: 0.4, a: 1}
   _interactable: 1
+--- !u!114 &1674847758235277360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3843298739203446680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ca0f2357bde64942bcf3a0915474faf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tip: "\u91CD\u7F6E\u53C2\u6570"
+  offset: {x: 0, y: -0.24, z: 0}
+  isShow: 0
 --- !u!1 &4448839461648864473
 GameObject:
   m_ObjectHideFlags: 0
