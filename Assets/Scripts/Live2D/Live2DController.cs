@@ -66,10 +66,6 @@ namespace Live2D
 
         public virtual void Update()
         {
-            if (Input.GetKeyDown(KeyCode.K))
-            {
-                Test();
-            }
             // Debug.Log($"needPlayQueue:{needPlayQueue.Count} | motionCtrl:{motionCtrl.IsPlayingAnimation()}");
             if (needPlayQueue.Count > 0 && !motionCtrl.IsPlayingAnimation())
             {
@@ -122,23 +118,7 @@ namespace Live2D
             characterData.activeModelExps.Add(state);
             _activeExpressions.Add(state);
         }
-
-        public void Test()
-        {
-            var exp = new CubismExp3Json
-            {
-                Type = "Expression",
-                FadeInTime = 0.3f,
-                FadeOutTime = 0.3f,
-                Parameters = new[]
-                {
-                    new CubismExp3Json.SerializableExpressionParameter { Id = "ParamBrowAngle", Value = 1.0f, Blend = "Overwrite" },
-                    new CubismExp3Json.SerializableExpressionParameter { Id = "ParamEyeOpen", Value = 0.5f, Blend = "Multiply" },
-                    new CubismExp3Json.SerializableExpressionParameter { Id = "ParamMouthForm", Value = -0.8f, Blend = "Overwrite" }
-                }
-            };
-            SetExpression(exp);
-        }
+        
         public virtual void CancelExpression(CubismExp3Json expressionJson)
         {
             var state = _activeExpressions.Find(e => e.Json == expressionJson);
@@ -184,6 +164,7 @@ namespace Live2D
         }
         private IEnumerator PlayExpressionFadeIn(ExpressionState state)
         {
+            Debug.Log("Play");
             var expressionJson = state.Json;
             float duration = expressionJson.FadeInTime;
             float time = 0f;

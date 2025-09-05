@@ -309,7 +309,7 @@ namespace Character
             {
                 if (!item.expOn){continue;}
 
-                var keyStr = item.expName;
+                var keyStr = item.expNickname;
                 try
                 {
                     // 尝试将 pattern 作为正则表达式匹配 input
