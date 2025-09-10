@@ -201,6 +201,7 @@ namespace WUI
         /// <param name="eventData"></param>
         public void OnScroll(PointerEventData eventData)
         {
+            if(_dataList.Count== 0){return;}
             if (_endDataInx >= _dataList.Count - 1 && CheckState(_lineList[^1].RectTransform,GetBottomEdge(content)) == 1 && eventData.scrollDelta.y < 0)
             {
                 _endDataInx = _dataList.Count - 1;

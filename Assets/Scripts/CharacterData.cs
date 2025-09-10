@@ -36,6 +36,7 @@ public class CharacterData : IPageListItem
     
     public Vector3 uiPos = Vector3.zero;
     public Vector3 uiScale = Vector3.one;
+    public float uiScaleCoefficient = 1;
     
     public Vector3 deskPos = Vector3.zero;
     public Vector3 deskScale = Vector3.one;

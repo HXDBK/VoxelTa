@@ -58,6 +58,7 @@ namespace Character
         private bool _isSettingCenter;
         public GameObject setCenterPanel;
         //缩放
+        public Slider uiSizeSlider;
         private float _startScaleMagnitude;
         private Vector3 _originalScale;
         private float _scroll;
@@ -150,6 +151,8 @@ namespace Character
             isBreathToggle.onValueChanged.AddListener(_=>SetData());
             isBlinkToggle.onValueChanged.AddListener(_=>SetData());
             isLookMouseToggle.onValueChanged.AddListener(_=>SetData());
+            
+            uiSizeSlider.onValueChanged.AddListener(ChangeUIScale);
             
             // moveButton.onPointerDown.AddListener(StartMoveFurniture);
             // moveButton.onPointerUp.AddListener(EndMoveFurniture);
@@ -271,7 +274,21 @@ namespace Character
                     _scrollSaveTimer += Time.deltaTime;
                     if (_scrollSaveTimer >= _scrollSaveDelay)
                     {
+                        _scrollSaveTimer = 0;
                         EndScaleFurniture();
+                        _scaleChanged = false;
+                    }
+                }
+            }
+            else
+            {
+                if (_scaleChanged)
+                {
+                    _scrollSaveTimer += Time.deltaTime;
+                    if (_scrollSaveTimer >= _scrollSaveDelay)
+                    {
+                        SaveData(false);
+                        _scrollSaveTimer = 0;
                         _scaleChanged = false;
                     }
                 }
@@ -500,7 +517,21 @@ namespace Character
             }
             SaveData(false);
         }
-        
+
+        private void ChangeUIScale(float coefficient)
+        {
+            if (curModel == null) return;
+            curModel.transform.localScale = coefficient * curCharacter.uiScale;
+            curCharacter.uiScaleCoefficient = coefficient;
+            _scaleChanged = true;
+        }
+        public void ResetUIScale()
+        {
+            if (curModel == null) return;
+            curModel.transform.localScale = curCharacter.uiScale;
+            curCharacter.uiScaleCoefficient = 1;
+            _scaleChanged = true;
+        }
         #endregion
         #region ----------移动控制----------
         private void StartMoveFurniture()
@@ -524,11 +555,11 @@ namespace Character
                     break;
                 case GameMode.ModeTalk:
                     curCharacter.pos = curModel.transform.position;
-                    curCharacter.scale = curModel.transform.localScale;
+                    curCharacter.scale = curModel.transform.localScale/curCharacter.uiScaleCoefficient;
                     break;
                 case GameMode.Desktop:
                     curCharacter.deskPos = curModel.transform.position;
-                    curCharacter.deskScale = curModel.transform.localScale;
+                    curCharacter.deskScale = curModel.transform.localScale/curCharacter.uiScaleCoefficient;;
                     break;
             }
             SaveData(false);
@@ -682,6 +713,8 @@ namespace Character
             isBreathToggle.onValueChanged.RemoveAllListeners();
             isBlinkToggle.onValueChanged.RemoveAllListeners();
             isLookMouseToggle.onValueChanged.RemoveAllListeners();
+            uiSizeSlider.onValueChanged.RemoveAllListeners();
+
             //UI更新
             characterDescriptionInput.text = curCharacter.characterDescription;
             usernameInput.text = curCharacter.userName;
@@ -690,6 +723,7 @@ namespace Character
             isBlinkToggle.isOn = curCharacter.isBlink;
             isBreathToggle.isOn = curCharacter.isBreath;
             isLookMouseToggle.isOn = curCharacter.isLookAt;
+            uiSizeSlider.value = curCharacter.uiScaleCoefficient;
             //重新绑定
             characterDescriptionInput.onValueChanged.AddListener(_ => SetData());
             usernameInput.onValueChanged.AddListener(_ => SetData());
@@ -699,6 +733,8 @@ namespace Character
             isBreathToggle.onValueChanged.AddListener(_=>SetData());
             isBlinkToggle.onValueChanged.AddListener(_=>SetData());
             isLookMouseToggle.onValueChanged.AddListener(_=>SetData());
+            uiSizeSlider.onValueChanged.AddListener(ChangeUIScale);
+
             // 同步记忆数据到 UI
             // UIPanel.BindList(curCharacter.memories,
             //     memoryLineList,
@@ -916,6 +952,14 @@ namespace Character
         {
             curModel = null;
             curCharacter.live2dPath = "";
+            curCharacter.pos = Vector3.zero;
+            curCharacter.scale = Vector3.one;
+            curCharacter.deskPos = Vector3.zero;
+            curCharacter.deskScale = Vector3.one;
+            curCharacter.uiScale = Vector3.one;
+            curCharacter.lookCenter = Vector3.zero;
+            curCharacter.uiScaleCoefficient = 1;
+            
             curCharacter.modelParameters.Clear();
             curCharacter.modelExps.Clear();
             curCharacter.modelMotions.Clear();
@@ -930,11 +974,7 @@ namespace Character
         {
             // 6. 设置模型位置和缩放
             curModel.transform.localPosition = curCharacter.uiPos;
-            curModel.transform.localScale = curCharacter.uiScale;
-            Debug.Log(curCharacter.characterTitle);
-            Debug.Log(curCharacter.uiScale);
-            Debug.Log(curCharacter.uiPos);
-                
+            curModel.transform.localScale = curCharacter.uiScale * curCharacter.uiScaleCoefficient;
             curModel.SetLayer(201);
             curModel.SetColor(Color.white);
         }
@@ -962,7 +1002,7 @@ namespace Character
         private void SetModelToUI()
         {
             if (targetUIRect == null || curModel == null) return;
-
+            if(curCharacter.uiScale != Vector3.one){return;}
             // 1. 获取 UI 区域的世界四个角
             Vector3[] corners = new Vector3[4];
             targetUIRect.GetWorldCorners(corners);
@@ -990,10 +1030,12 @@ namespace Character
 
             // 6. 设置模型位置和缩放
             curModel.transform.localPosition = localCenter;
-            curModel.transform.localScale = Vector3.one * scale;
+            curModel.transform.localScale = Vector3.one * (scale * curCharacter.uiScaleCoefficient);
             
             curCharacter.uiPos = curModel.transform.localPosition;
-            curCharacter.uiScale = curModel.transform.localScale;
+            curCharacter.uiScale = curModel.transform.localScale / curCharacter.uiScaleCoefficient;;
+            _scaleChanged = true;
+            Debug.Log(curCharacter.uiScale);
         }
         public void FitBoxColliderToModel()
         {
