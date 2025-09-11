@@ -14,7 +14,7 @@ namespace Live2D
         public SpriteRenderer spriteRenderer;
         public Sprite sprite;
         public bool fitColliderToSprite = true;
-
+        
         private new void Awake()
         {
             // 刻意不调 base.Awake()，避免 Cubism 组件的查找与启用

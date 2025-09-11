@@ -46812,6 +46812,7 @@ MonoBehaviour:
     modelMotions: []
     modelExps: []
     activeModelExps: []
+    components: []
     talkData:
       dialogueEntries: []
   controller: {fileID: 0}
@@ -46882,6 +46883,7 @@ MonoBehaviour:
     modelMotions: []
     modelExps: []
     activeModelExps: []
+    components: []
     talkData:
       dialogueEntries: []
   noCharacterPanel: {fileID: 1424947873}

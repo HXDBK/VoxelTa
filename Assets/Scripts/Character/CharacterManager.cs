@@ -317,6 +317,11 @@ namespace Character
             }
         }
 
+        /// <summary>
+        /// 检测对话中的表情
+        /// NEEDREMOVE
+        /// </summary>
+        /// <param name="entry"></param>
         private void CheckExpAndMotion(DialogueEntry entry)
         {
             if(curModel == null) return;
@@ -418,6 +423,9 @@ namespace Character
             }
         }
 
+        /// <summary>
+        /// NEEDCHANGE
+        /// </summary>
         public void HideDetailPanel()
         {
             SaveParameters();
@@ -442,15 +450,12 @@ namespace Character
             curCharacter.userName = usernameInput.text;
             curCharacter.characterName = characterNameInput.text;
             curCharacter.characterTitle = characterTitleInput.text;
+            //NEEDREMOVE
             curCharacter.isBlink = isBlinkToggle.isOn;
             curCharacter.isLookAt = isLookMouseToggle.isOn;
             curCharacter.isBreath = isBreathToggle.isOn;
-            
             if (curModel != null)
             {
-                curModel.SetBreath(isBlinkToggle.isOn);
-                curModel.SetLookMouse(isLookMouseToggle.isOn);
-                curModel.SetBlink(isBlinkToggle.isOn);
                 curCharacter.lookCenter = curModel.autoLookAtCenter.localPosition;
             }
 
@@ -496,6 +501,12 @@ namespace Character
                 _isChangeData = false;
                 saveButton.gameObject.SetActive(false);
             }
+        }
+
+        public void Changed()
+        {
+            _isChangeData = true;
+            saveButton.gameObject.SetActive(true);
         }
         #region 模型控制相关
 
@@ -566,6 +577,10 @@ namespace Character
             _isMove = false;
         }
         #endregion
+        
+        /// <summary>
+        /// NEEDREMOVE
+        /// </summary>
         #region ----------设置中心----------
 
         public void StartSetCenter()
@@ -845,10 +860,12 @@ namespace Character
         }
         /// <summary>
         /// 模型成功加载后
+        /// NEEDCHANGE
         /// </summary>
         /// <param name="model"></param>
         void OnLive2dLoadSuccess(Live2DController model)
         {
+            Debug.Log(model);
             if (model == null)
             {
                 loadingPanel.SetActive(false);
@@ -1053,24 +1070,6 @@ namespace Character
             boxCollider2D.offset = localCenter;
         }
         /// <summary>
-        /// 计算整个 Live2D 模型的包围盒（模型本地坐标空间）
-        /// </summary>
-        private Bounds CalculateCubismModelBounds(CubismModel model)
-        {
-            var drawables = model.Drawables;
-            if (drawables == null || drawables.Length == 0)
-                return new Bounds(Vector3.zero, Vector3.zero);
-
-            Bounds combinedBounds = drawables[0].GetComponent<MeshRenderer>().bounds;
-
-            for (int i = 1; i < drawables.Length; i++)
-            {
-                combinedBounds.Encapsulate(drawables[i].GetComponent<MeshRenderer>().bounds);
-            }
-
-            return combinedBounds;
-        }
-        /// <summary>
         /// 设置模型是否展示
         /// </summary>
         private void UpdateModelShow()
@@ -1237,7 +1236,6 @@ namespace Character
                 }
             }
         }
-
         private void MouthTalk(DialogueEntry entry)
         {
             if (!curCharacter.SettingData.ttsIson && curModel != null && curModel.characterData == curCharacter)
@@ -1400,8 +1398,7 @@ namespace Character
             curModel.SetBlink(false);
             curModel.SetBreath(false);
             curModel.SetLookMouse(false);
-        }
-
+        }   
         public void AddCustomExpParameter(ModelParameter target)
         {
             _customExpChanged = true;
@@ -1459,7 +1456,6 @@ namespace Character
                 curModel.ClearAllExpressions();
             }
         }
-
         public void SaveAndHideCustomExp()
         {
             if (customExpNameInput.text.Length <= 0)
@@ -1532,7 +1528,7 @@ namespace Character
         }
         #endregion
         
-        #region 参数相关
+        #region 参数/组件 相关
         /// <summary>
         /// 为所有参数创建一个快照
         /// </summary>
@@ -1656,7 +1652,6 @@ namespace Character
             }
             SetData();
         }
-
         public void GotoTargetParam(ModelExp.TmpExpParameter target)
         {
             foreach (var parameterPageItem in parameterPageItems)

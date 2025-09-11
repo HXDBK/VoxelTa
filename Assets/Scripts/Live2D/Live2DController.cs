@@ -15,10 +15,8 @@ using UnityEngine.Rendering;
 
 namespace Live2D
 {
-    public class Live2DController : MonoBehaviour
+    public class Live2DController : GeneralModel
     {
-        public CharacterData characterData;
-
         public CubismModel modelData;
         public SortingGroup sortingGroup;
         public Transform lookAtTarget;
@@ -134,7 +132,7 @@ namespace Live2D
             characterData.activeModelExps.Remove(state);
             GameManager.instance.SaveData();
         }
-        public virtual void ClearAllExpressions()
+        public override void ClearAllExpressions()
         {
             foreach (var activeModelExp in characterData.activeModelExps)
             {
@@ -280,7 +278,7 @@ namespace Live2D
             }
         }
 
-        public virtual void SetLayer(int layer)
+        public override void SetLayer(int layer)
         {
             if (sortingGroup == null)
             {
@@ -289,7 +287,7 @@ namespace Live2D
             sortingGroup.sortingOrder = layer;
         }
 
-        public virtual void SetColor(Color target)
+        public override void SetColor(Color target)
         {
             foreach (var drawable in modelData.Drawables)
             {
@@ -298,7 +296,7 @@ namespace Live2D
             }
         }
 
-        public virtual Bounds GetBounds()
+        public override Bounds GetBounds()
         {
             var drawables = modelData.Drawables;
             if (drawables == null || drawables.Length == 0)
@@ -314,7 +312,7 @@ namespace Live2D
             return combinedBounds;
         }
 
-        public virtual void FakeTalk(float duration)
+        public override void FakeTalk(float duration)
         {
             mouthController.FakeTalk(duration);
         }

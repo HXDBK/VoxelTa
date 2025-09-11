@@ -48,6 +48,7 @@ public class CharacterData : IPageListItem
     public List<ModelMotion> modelMotions = new ();
     public List<ModelExp> modelExps = new ();
     public List<Live2DController.ExpressionState> activeModelExps = new ();
+    public List<ModelComponent> components = new ();
     
     
     public TalkData talkData;
