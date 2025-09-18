@@ -43,12 +43,12 @@ namespace Live2D
 
         public void RemoveSelf()
         {
-            CharacterManager.instance.RemoveCustomExpParameter(_modelParameter);
+            CharacterManager.instance.live2dDetailPanel.RemoveCustomExpParameter(_modelParameter);
         }
 
         public void GotoTarget()
         {
-            CharacterManager.instance.GotoTargetParam(_modelParameter);
+            CharacterManager.instance.live2dDetailPanel.GotoTargetParam(_modelParameter);
         }
         private void SetUIByValue(float value)
         {

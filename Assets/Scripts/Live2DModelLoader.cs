@@ -16,10 +16,11 @@ using Live2D.Cubism.Framework.Motion;
 using Live2D.Cubism.Framework.MotionFade;
 using Live2D.Cubism.Framework.Pose;
 using Live2D.Cubism.Rendering;
+using Model;
 using Newtonsoft.Json;
 using SFB; // StandaloneFileBrowser
 
-public class Live2DModelLoader : MonoBehaviour
+public class Live2DModelLoader : ModelLoader
 {
     [Header("Runtime Settings")]
     public Transform lookTarget;
@@ -32,7 +33,7 @@ public class Live2DModelLoader : MonoBehaviour
     private CubismUpdateController _updater;
     private CubismMotionController _motionCtrl;
     public readonly Dictionary<string,CubismExp3Json> expressions = new();
-    private readonly Dictionary<string, CubismMotion3Json> _motions = new();
+    public readonly Dictionary<string, CubismMotion3Json> motions = new();
     private readonly Dictionary<string, CubismFadeMotionData> _motionDatas = new();
     public readonly Dictionary<string, AnimationClip> clips = new();
 
@@ -42,7 +43,7 @@ public class Live2DModelLoader : MonoBehaviour
     {
         Debug.Log("loading model from file");
         expressions.Clear();
-        _motions.Clear();
+        motions.Clear();
         _motionDatas.Clear();
         clips.Clear();
         modelData = target;
@@ -109,6 +110,7 @@ public class Live2DModelLoader : MonoBehaviour
             LoadExpressions();
             LoadMotions();
             _updater.Refresh();
+            controller.expressions = expressions;
             onComplete?.Invoke(controller);
             yield break;
         }
@@ -175,7 +177,7 @@ public class Live2DModelLoader : MonoBehaviour
             string key = Path.GetFileNameWithoutExtension(path).Replace(".motion3", "");
             clip.name = key;
             clips[key] = clip;
-            _motions[key] = motion3Json;
+            motions[key] = motion3Json;
             _motionDatas[key] = fade;
         }
 

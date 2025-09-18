@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Model;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Object = System.Object;
 
 namespace Live2D
 {
@@ -15,7 +17,7 @@ namespace Live2D
         public Sprite sprite;
         public bool fitColliderToSprite = true;
         
-        private new void Awake()
+        private void Awake()
         {
             // 刻意不调 base.Awake()，避免 Cubism 组件的查找与启用
             if (spriteRenderer == null)
@@ -40,12 +42,12 @@ namespace Live2D
             }
 
             // 碰撞盒（可选）
-            if (boxCollider2D == null)
+            if (boxCollider2d == null)
             {
-                boxCollider2D = GetComponent<BoxCollider2D>();
-                if (boxCollider2D == null)
+                boxCollider2d = GetComponent<BoxCollider2D>();
+                if (boxCollider2d == null)
                 {
-                    boxCollider2D = gameObject.AddComponent<BoxCollider2D>();
+                    boxCollider2d = gameObject.AddComponent<BoxCollider2D>();
 
                 }
             }
@@ -54,29 +56,20 @@ namespace Live2D
             {
                 FitColliderToSprite();
             }
-
-            // 明确：图片模型不使用这些字段/组件
-            modelData = null;
-            motionCtrl = null;
-            needPlayQueue = null;
-            isBreath = false;
-            isBlink = false;
-            isLookMouse = false;
-
-            // 如果基类里曾创建过这些对象，统一禁用/隐藏
-            if (lookAtTarget != null) lookAtTarget.gameObject.SetActive(false);
-            if (autoLookAtCenter != null) autoLookAtCenter.gameObject.SetActive(false);
-            if (harmonicMotionController != null) harmonicMotionController.enabled = false;
-            if (autoBlink != null) autoBlink.enabled = false;
-            if (mouthController != null) mouthController.enabled = false;
-            if (autoLookAt != null) autoLookAt.enabled = false;
             
-            autoLookAtCenter = new GameObject("autoLookAtCenter").transform;
-            autoLookAtCenter.parent = transform;
         }
+        public override void SetBreath(bool target)
+        {
+            
+        }
+        public override void SetBlink(bool target)
+        {
+            
+        }
+        public override void SetLookMouse(bool target)
+        {
 
-        public override void Start() { /* 空实现：不需要队列或动画控制 */ }
-        public override void Update() { /* 空实现：不需要轮询 */ }
+        }
         public override Bounds GetBounds()
         {
             if (spriteRenderer == null || spriteRenderer.sprite == null)
@@ -85,17 +78,6 @@ namespace Live2D
         }
 
         // —— 基类公共接口的安全空实现 —— //
-        public override void PlayMotion(AnimationClip target) { /* no-op */ }
-        public override void PlayMotions(List<AnimationClip> targets) { /* no-op */ }
-
-        public override void SetBreath(bool target) { isBreath = false; /* no-op */ }
-        public override void SetBlink(bool target) { isBlink = false; /* no-op */ }
-        public override void SetLookMouse(bool target)
-        {
-            isLookMouse = false; // 静态图不做看向
-            if (lookAtTarget != null) lookAtTarget.gameObject.SetActive(false);
-            if (autoLookAt != null) autoLookAt.enabled = false;
-        }
 
         public override void SetLayer(int layer)
         {
@@ -111,8 +93,11 @@ namespace Live2D
         }
 
         // Cubism 表情接口彻底置空
-        public override void SetExpression(Live2D.Cubism.Framework.Json.CubismExp3Json _json) { /* no-op */ }
-        public override void CancelExpression(Live2D.Cubism.Framework.Json.CubismExp3Json _json) { /* no-op */ }
+        public override void SetExpression(Object expression)
+        {
+            base.SetExpression(expression);
+        }
+
         public override void ClearAllExpressions() { /* no-op */ }
 
         public override void FakeTalk(float duration) {/* no-op */ }
@@ -124,15 +109,18 @@ namespace Live2D
             if (spriteRenderer != null) spriteRenderer.sprite = newSprite;
             if (autoFitCollider) FitColliderToSprite();
         }
-
+        public override void OnLoadSuccess(CharacterData character,ModelLoader loader)
+        {
+            characterData = character;
+        }
         private void FitColliderToSprite()
         {
-            if (boxCollider2D == null || spriteRenderer == null || spriteRenderer.sprite == null)
+            if (boxCollider2d == null || spriteRenderer == null || spriteRenderer.sprite == null)
                 return;
 
             var bounds = spriteRenderer.sprite.bounds;
-            boxCollider2D.size = bounds.size;
-            boxCollider2D.offset = bounds.center;
+            boxCollider2d.size = bounds.size;
+            boxCollider2d.offset = bounds.center;
         }
     }
 }

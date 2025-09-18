@@ -64,9 +64,7 @@ public class RingMenu : UIPanel
         }
         float angleStep = 360f / itemCount;
         float spiralAngleOffset = spiralAngleTurns * Mathf.PI * 2f;
-
-        int finishedCount = 0;
-
+        
         for (int i = 0; i < itemCount; i++)
         {
             RectTransform rect = items[i].GetComponent<RectTransform>();

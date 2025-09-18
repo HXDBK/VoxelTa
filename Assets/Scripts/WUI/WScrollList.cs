@@ -36,7 +36,6 @@ namespace WUI
         private Vector2 _lastMaskSize;
         private bool _changeFlag;
         private float _changeFlagTime;
-        private bool _shouldScrollToBottom = false;
 
         protected override void Start()
         {
@@ -68,7 +67,6 @@ namespace WUI
                     }
                     _lineList.Clear();
                     Refresh();
-                    _shouldScrollToBottom = true; // 延迟处理
                     _changeFlag = false;
                 }
             }

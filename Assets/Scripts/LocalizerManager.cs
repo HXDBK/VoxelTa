@@ -66,7 +66,6 @@ public class LocalizerManager : MonoBehaviour
         curLanguageCode = ES3.Load("language",defaultValue:"zh-Hans");
         chineseToggle.isOn = curLanguageCode == "zh-Hans";
         enmToggle.isOn = curLanguageCode != "zh-Hans";
-        Debug.Log(chineseToggle.isOn);
         SetByCode(curLanguageCode);
         chineseToggle.onValueChanged.AddListener(ChangeLanguage);
     }

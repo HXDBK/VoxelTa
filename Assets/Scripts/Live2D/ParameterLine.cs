@@ -119,13 +119,13 @@ namespace Live2D
             valueSlider.onValueChanged.AddListener(OnSliderValueChanged);
 
             defButton?.gameObject.SetActive(!Mathf.Approximately(_targetValue, _cubismParameter.DefaultValue));
-            if (CharacterManager.instance.customExpPanel.isShow)
+            if (CharacterManager.instance.live2dDetailPanel.customExpPanel.isShow)
             {
                 addButton.gameObject.SetActive(true);
                 addButton.onPointerClick.RemoveAllListeners();
                 addButton.onPointerClick.AddListener(() =>
                 {
-                    CharacterManager.instance.AddCustomExpParameter(_modelParameter);
+                    CharacterManager.instance.live2dDetailPanel.AddCustomExpParameter(_modelParameter);
                 });
             }
             else

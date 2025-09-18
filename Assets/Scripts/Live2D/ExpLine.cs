@@ -1,3 +1,4 @@
+using System;
 using Character;
 using Live2D.Cubism.Framework.Expression;
 using Live2D.Cubism.Framework.Json;
@@ -24,6 +25,17 @@ namespace Live2D
         
         private CubismExp3Json _expData;
         private ModelExp _modelExp;
+
+        private void Start()
+        {
+            playButton.onPointerClick.RemoveAllListeners();
+            playButton.onPointerClick.AddListener(Play);
+            isOn.onValueChanged.RemoveAllListeners();
+            isOn.onValueChanged.AddListener(SetIsOn);
+            expNameInput.onValueChanged.RemoveAllListeners();
+            expNameInput.onValueChanged.AddListener(SetNickName);
+        }
+
         private void Play()
         {
             CharacterManager.instance.SetExpression(_expData,true);
@@ -44,7 +56,11 @@ namespace Live2D
         {
             return _modelExp;
         }
-
+        private void SetNickName(string target)
+        {
+            _modelExp.expNickname = target;
+            // CharacterManager.instance.Changed();
+        }
         public override void SetData(IPageListItem item)
         {
             _modelExp = item as ModelExp;
@@ -52,12 +68,10 @@ namespace Live2D
             _expData = _modelExp.exp3Json;
             expNameInput.text = _modelExp.expNickname;
             fileNameText.text = _modelExp.expName;
-            playButton.onPointerClick.RemoveAllListeners();
-            playButton.onPointerClick.AddListener(Play);
+
             isOn.isOn = _modelExp.expOn;
             diableImage.gameObject.SetActive(!_modelExp.expOn);
-            isOn.onValueChanged.RemoveAllListeners();
-            isOn.onValueChanged.AddListener(SetIsOn);
+
             icon.sprite = playSprite;
             removeButton.gameObject.SetActive(_modelExp.type == 1);
             editButton.gameObject.SetActive(_modelExp.type == 1);
@@ -89,12 +103,12 @@ namespace Live2D
 
         private void DoRemove()
         {
-            CharacterManager.instance.RemoveCusExp(_modelExp);
+            CharacterManager.instance.live2dDetailPanel.RemoveCusExp(_modelExp);
         }
 
         public void EditExp()
         {
-            CharacterManager.instance.ShowCustomExpPanel(this);
+            CharacterManager.instance.live2dDetailPanel.ShowCustomExpPanel(this);
             CharacterManager.instance.SetExpression(_expData,true);
         }
     }

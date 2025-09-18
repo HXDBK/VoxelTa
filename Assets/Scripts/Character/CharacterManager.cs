@@ -10,6 +10,7 @@ using Live2D;
 using Live2D.Cubism.Core;
 using Live2D.Cubism.Framework;
 using Live2D.Cubism.Framework.Json;
+using Model;
 using SFB;
 using TMPro;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace Character
         public static CharacterManager instance;
         public UIPanel characterPanel;
         public UIPanel detailPanel;
+        public Live2dDetailPanel live2dDetailPanel;
         
         [Header("角色列表")]
         public WPageList characterPageList;
@@ -37,8 +39,9 @@ namespace Character
         [Header("角色立绘")] 
         private bool _needShowLive2d;
         public RectTransform targetUIRect;
-        public Live2DController curModel;
+        public GeneralModel curModel;
         public Live2DModelLoader live2DModelLoader;
+        public CustomModelLoader customModelLoader;
         public GameObject loadingPanel;
         public TMP_Text loadText;
         public WButton loadButton;
@@ -54,9 +57,7 @@ namespace Character
         //旋转
         private bool _isRotating;
         private float _startAngleOffset;
-        //设置模型中心
-        private bool _isSettingCenter;
-        public GameObject setCenterPanel;
+        
         //缩放
         public Slider uiSizeSlider;
         private float _startScaleMagnitude;
@@ -71,30 +72,6 @@ namespace Character
         [Header("头像")]
         public Image headImage;
         public Sprite defHeadIcon;
-        [Header("立绘参数")] 
-        public WPageList parameterPageList;
-        public TMP_InputField parameterSearchInput;
-        private readonly List<ModelParameter> _needSetDef = new (); 
-        private static readonly NaturalSortComparer NaturalComparer = new NaturalSortComparer();
-
-        [Header("立绘表情")]
-        [HideInInspector]
-        public List<ModelExp> expPageItems = new();
-        public List<ModelParameter> parameterPageItems = new();
-        public WPageList expPageList;
-
-        public Toggle isShowDisableExpToggle;
-        // 自定义表情
-        public UIPanel customExpPanel;
-        public WPageList customExpParameterPageList;
-        public TMP_InputField customExpNameInput;
-        public TMP_InputField customExpNickNameInput;
-        public TMP_InputField customExpFadeInInput;
-        public TMP_InputField customExpFadeOutInput;
-        private ModelExp _curCustomExp;
-        private readonly Dictionary<ModelParameter,float> _paramsSnapshot = new();
-        private bool _needUseSnapshot;
-        private bool _customExpChanged;
         
         [Header("角色详情输入框")]
         public TMP_InputField characterDescriptionInput;
@@ -108,6 +85,9 @@ namespace Character
         public TMP_InputField memoryTitleInput;
         public TMP_InputField memoryContentInput;
         private Memory _curMemory;
+        
+        [Header("组件和自定义模型")]
+        public ComponentPanel componentPanel;
 
         [Header("保存相关")] 
 
@@ -122,13 +102,28 @@ namespace Character
         private void Awake()
         {
             instance = this;
-            characterDatas = ES3.Load("characterDatas", new List<CharacterData>());
+            string folderPath = Application.persistentDataPath + "/Characters"; // 你存放.vta文件的路径
+            List<string> vtaFiles = new List<string>();
+
+            if (Directory.Exists(folderPath))
+            {
+                string[] files = Directory.GetFiles(folderPath, "*.vta", SearchOption.TopDirectoryOnly);
+                vtaFiles.AddRange(files);
+            }
+            foreach (var file in vtaFiles)
+            {
+                Debug.Log("Found vta file: " + file);
+                characterDatas.Add(ES3.Load<CharacterData>("CharacterData",file));
+            }
+
+            characterDatas = characterDatas.OrderByDescending(x => x.createTime).ToList();
             if (characterDatas.Count > 0)
             {
                 SetCurCharacter(characterDatas[0]);
             }
             else
             {
+                curCharacter = null;
                 OnSetCharacterData?.Invoke(null);
                 noCharacterPanel.SetActive(true);
                 ClearCharacterPanel();
@@ -162,31 +157,6 @@ namespace Character
 
             DialogManager.instance.OnMessageReceived += CheckExpAndMotion;
             DialogManager.instance.OnMessageReceived += MouthTalk;
-            
-            parameterSearchInput.onSubmit.AddListener(_=>Search());
-            isShowDisableExpToggle.onValueChanged.AddListener(IsShowDisableExps);
-            
-            //自定义表情相关
-            customExpNameInput.onValueChanged.RemoveAllListeners();
-            customExpNameInput.onValueChanged.AddListener(_ =>
-            {
-                _customExpChanged = true;
-            });
-            customExpNickNameInput.onValueChanged.RemoveAllListeners();
-            customExpNickNameInput.onValueChanged.AddListener(_ =>
-            {
-                _customExpChanged = true;
-            });
-            customExpFadeInInput.onValueChanged.RemoveAllListeners();
-            customExpFadeInInput.onValueChanged.AddListener(_ =>
-            {
-                _customExpChanged = true;
-            });
-            customExpFadeOutInput.onValueChanged.RemoveAllListeners();
-            customExpFadeOutInput.onValueChanged.AddListener(_ =>
-            {
-                _customExpChanged = true;
-            });
         }
         void Update()
         {
@@ -201,14 +171,14 @@ namespace Character
                     MoveFurniture();
                 }
             }
-            else if (_isSettingCenter)
-            {
-                if (Input.GetMouseButtonDown(0))
-                {
-                    curModel.autoLookAtCenter.transform.position = _camera.ScreenToWorldPoint(Input.mousePosition);
-                    EndSetCenter();
-                }
-            }
+            // else if (_isSettingCenter)
+            // {
+            //     if (Input.GetMouseButtonDown(0))
+            //     {
+            //         curModel.autoLookAtCenter.transform.position = _camera.ScreenToWorldPoint(Input.mousePosition);
+            //         EndSetCenter();
+            //     }
+            // }
 
             if (ringMenu.isShow && Input.GetMouseButtonUp(1))
             {
@@ -249,17 +219,17 @@ namespace Character
                     Collider2D col = Physics2D.OverlapPoint(mouseWorldPos);
                     if (col && col.CompareTag("Character"))
                     {
-                        float sensitivity = 0.1f;        // 调下灵敏度
+                        float sensitivity = 0.2f;        // 调下灵敏度
                         float factor = 1f + _scroll * sensitivity;
 
                         // 避免 factor 过小或为负数导致翻转
-                        factor = Mathf.Clamp(factor, 0.5f, 1.5f);
+                        factor = Mathf.Clamp(factor, 0.5f, 20f);
 
                         Vector3 newScale = curModel.transform.localScale * factor;
 
                         // 统一按比例限制范围，防止太小或太大
                         float minS = 0.05f;
-                        float maxS = 10f;
+                        float maxS = 20f;
                         float clamped = Mathf.Clamp(newScale.x, minS, maxS);
                         newScale = Vector3.one * clamped;
 
@@ -295,28 +265,6 @@ namespace Character
             }
         }
 
-        private void LateUpdate()
-        {
-            if (_needSetDef.Count > 0)
-            {
-                foreach (var parameterListItemData in _needSetDef)
-                {
-                    parameterListItemData.ResetToDefault();
-                }
-                _needSetDef.Clear();
-            }
-
-            if (_needUseSnapshot)
-            {
-                foreach (var parameterPageItem in parameterPageItems)
-                {
-                    parameterPageItem.parameter.Value = _paramsSnapshot[parameterPageItem];
-                }
-                _paramsSnapshot.Clear();
-                _needUseSnapshot = false;
-            }
-        }
-
         /// <summary>
         /// 检测对话中的表情
         /// NEEDREMOVE
@@ -324,31 +272,8 @@ namespace Character
         /// <param name="entry"></param>
         private void CheckExpAndMotion(DialogueEntry entry)
         {
-            if(curModel == null) return;
-            var message = entry.content;
-            curModel.ClearAllExpressions();
-            foreach (var item in expPageItems)
-            {
-                if (!item.expOn){continue;}
-
-                var keyStr = item.expNickname;
-                try
-                {
-                    // 尝试将 pattern 作为正则表达式匹配 input
-                    if (Regex.IsMatch(message, keyStr))
-                    {
-                        SetExpression(item.exp3Json,true);
-                    }
-                }
-                catch (ArgumentException)
-                {
-                    // pattern 不是有效正则，退而求其次使用普通字符串匹配
-                    if (message.Contains(keyStr))
-                    {
-                        SetExpression(item.exp3Json,true);
-                    }
-                }
-            }
+            curModel.CheckExp(entry);
+            curModel.CheckMotion(entry);
         }
 
         public void ShowPanel()
@@ -418,24 +343,10 @@ namespace Character
             }
             else
             {
-                detailPanel.Show();
+                live2dDetailPanel.Show(curCharacter,curModel);
+                // detailPanel.Show();
                 UpdateModelShow();
             }
-        }
-
-        /// <summary>
-        /// NEEDCHANGE
-        /// </summary>
-        public void HideDetailPanel()
-        {
-            SaveParameters();
-            SaveExp();
-            if (curModel)
-            {
-                curModel.ClearAllExpressions();
-            }
-            detailPanel.Hide();
-            UpdateModelShow();
         }
         
         /// <summary>
@@ -451,13 +362,6 @@ namespace Character
             curCharacter.characterName = characterNameInput.text;
             curCharacter.characterTitle = characterTitleInput.text;
             //NEEDREMOVE
-            curCharacter.isBlink = isBlinkToggle.isOn;
-            curCharacter.isLookAt = isLookMouseToggle.isOn;
-            curCharacter.isBreath = isBreathToggle.isOn;
-            if (curModel != null)
-            {
-                curCharacter.lookCenter = curModel.autoLookAtCenter.localPosition;
-            }
 
             if (_curMemory != null)
             {
@@ -465,42 +369,58 @@ namespace Character
                 _curMemory.content = memoryContentInput.text;
             }
         }
-        /// <summary>
-        /// 保存角色数据到磁盘
-        /// </summary>
-        public void SaveData(bool showMsg = true)
+        public void SaveData( bool showMsg = true)
         {
             if (showMsg)
             {
                 MessageManager.instance.ShowMessage("已保存",MessageType.Success);
             }
-            ES3.Save("characterDatas",characterDatas);
+            string folderPath = Path.Combine(Application.persistentDataPath, "Characters");
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string filePath = Path.Combine(folderPath, curCharacter.id + ".vta");
+            ES3.Save("CharacterData",curCharacter,filePath);
             _isChangeData = false;
             saveButton.gameObject.SetActive(false);
         }
 
         private void SetDefData()
         {
-            var tmp = ES3.Load("characterDatas", new List<CharacterData>());
-            Debug.Log("Set Def");
-            Debug.Log(tmp.Count);
-            if (tmp.Count <= 0)
+            string folderPath = Path.Combine(Application.persistentDataPath, "Characters");
+            string filePath = Path.Combine(folderPath, curCharacter.id + ".vta");
+
+            if (File.Exists(filePath))
             {
-                characterDatas = tmp;
-                OnSetCharacterData?.Invoke(null);
-                noCharacterPanel.SetActive(true);
-                ClearCharacterPanel();
-                _isChangeData = false;
-                saveButton.gameObject.SetActive(false);
+                Debug.Log("已删除: " + filePath);
             }
             else
             {
-                var inx = characterDatas.IndexOf(curCharacter);
-                characterDatas = tmp;
-                curCharacter = characterDatas[inx];
-                _isChangeData = false;
-                saveButton.gameObject.SetActive(false);
+                Debug.LogWarning("文件不存在: " + filePath);
             }
+            var tmp = ES3.Load<CharacterData>("CharacterData",filePath);
+            var inx = characterDatas.IndexOf(curCharacter);
+            characterDatas[inx] = tmp;
+            curCharacter = characterDatas[inx];
+            _isChangeData = false;
+            saveButton.gameObject.SetActive(false);
+            // if (characterDatas == null)
+            // {
+            //     characterDatas = tmp;
+            //     OnSetCharacterData?.Invoke(null);
+            //     noCharacterPanel.SetActive(true);
+            //     ClearCharacterPanel();
+            //     _isChangeData = false;
+            //     saveButton.gameObject.SetActive(false);
+            // }
+            // else
+            // {
+            //     curCharacter = tmp;
+            //     _isChangeData = false;
+            //     saveButton.gameObject.SetActive(false);
+            // }
         }
 
         public void Changed()
@@ -577,30 +497,6 @@ namespace Character
             _isMove = false;
         }
         #endregion
-        
-        /// <summary>
-        /// NEEDREMOVE
-        /// </summary>
-        #region ----------设置中心----------
-
-        public void StartSetCenter()
-        {
-            _isSettingCenter = true;
-            curModel.SetLookMouse(false);
-            setCenterPanel.SetActive(true);
-            curModel.autoLookAtCenter.gameObject.SetActive(true);
-        }
-
-        private void EndSetCenter()
-        {
-            _isSettingCenter = false;
-            curModel.SetLookMouse(isLookMouseToggle.isOn);
-            setCenterPanel.SetActive(false);
-            curModel.autoLookAtCenter.gameObject.SetActive(false);
-            MessageManager.instance.ShowMessage("已设置模型视线中心点");
-            SetData();
-        }
-        #endregion
 
         /// <summary>
         /// 重置模型数据
@@ -640,20 +536,40 @@ namespace Character
                 characterPanel.Show();
             }
 
-            var title = "Untitled";
+            string baseTitle = "Untitled";
             switch (LocalizerManager.GetCode())
             {
                 case "zh-Hans":
-                    title = "未设置";
+                    baseTitle = "未设置";
                     break;
                 case "en":
-                    title = "Untitled";
+                    baseTitle = "Untitled";
                     break;
             }
+
+            // 查找现有最大序号
+            int maxIndex = 0;
+            foreach (var data in characterDatas)
+            {
+                if (data.characterTitle.StartsWith(baseTitle))
+                {
+                    // 截取 baseTitle 后的数字部分
+                    var suffix = data.characterTitle.Substring(baseTitle.Length);
+                    if (int.TryParse(suffix, out int num))
+                    {
+                        if (num > maxIndex) maxIndex = num;
+                    }
+                }
+            }
+
+            // 下一个序号
+            int newIndex = maxIndex + 1;
+            string title = baseTitle + newIndex;
+
             var characterData = new CharacterData { characterTitle = title };
-            characterDatas.Add(characterData);
+            characterDatas.Insert(0, characterData);
             SetCurCharacter(characterData);
-            SetData();
+            SaveData();
         }
         /// <summary>
         /// 移除指定角色
@@ -662,13 +578,24 @@ namespace Character
         public void RemoveCharacter(CharacterData target)
         {
             characterDatas.Remove(target);
+            string folderPath = Path.Combine(Application.persistentDataPath, "Characters");
+            string filePath = Path.Combine(folderPath, target.id + ".vta");
+
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+                Debug.Log("已删除: " + filePath);
+            }
+            else
+            {
+                Debug.LogWarning("文件不存在: " + filePath);
+            }
             // 处理当前选中角色被删除的情况
             if (curCharacter == target)
             {
                 curCharacter = characterDatas.Count > 0 ? characterDatas[0] : null;
             }
             UpdateCharacterPanel();
-            SetData();
         }
         /// <summary>
         /// 复制指定角色
@@ -711,7 +638,7 @@ namespace Character
             characterPageList.Clear();
             GameManager.instance.LoadImage("",headImage,defHeadIcon);
             UpdateModelShow();
-            SaveData(false);
+            // SaveData(false);
             characterPanel.Hide();
         }
         /// <summary>
@@ -772,6 +699,7 @@ namespace Character
         {
             if (_isChangeData)
             {
+                Debug.Log("VAR");
                 switch (LocalizerManager.GetCode())
                 {
                     case "zh-Hans":
@@ -811,7 +739,7 @@ namespace Character
         /// <param name="characterData"></param>
         public void ExportCharacter(CharacterData characterData)
         {
-            var extension = new ExtensionFilter("Character File", "character");
+            var extension = new ExtensionFilter("Character File", "vta");
             string path = StandaloneFileBrowser.SaveFilePanel("导出角色", "", characterData.characterTitle,  new[] { extension });
 
             if (!string.IsNullOrEmpty(path))
@@ -833,20 +761,50 @@ namespace Character
         /// </summary>
         public void ImportCharacterData()
         {
-            var extension = new ExtensionFilter("Character File", "character");
+            var extension = new ExtensionFilter("Character File", "vta");
             string[] paths = StandaloneFileBrowser.OpenFilePanel("加载角色", "", new[] { extension }, false);
 
             if (paths.Length > 0 && File.Exists(paths[0]))
             {
                 var newCharacterData = ES3.Load<CharacterData>(paths[0]);
+
+                // 检查是否重名
+                string baseTitle = newCharacterData.characterTitle;
+                string finalTitle = baseTitle;
+                int index = 1;
+                while (characterDatas.Any(c => c.characterTitle == finalTitle))
+                {
+                    finalTitle = $"{baseTitle}{index}";
+                    index++;
+                }
+                newCharacterData.characterTitle = finalTitle;
+
                 characterDatas.Add(newCharacterData);
                 SetCurCharacter(newCharacterData);
+                SaveData();
             }
         }
+
         #endregion
         
         #region  立绘相关
 
+        private void LoadModel()
+        {
+            string ext = Path.GetExtension(curCharacter.live2dPath).ToLowerInvariant();
+            if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
+            {
+                LoadLive2d();
+            }
+            else if (ext == ".json")
+            {
+                LoadLive2d();
+            }
+            else if(ext == ".vtam")
+            {
+                LoadCustomModel();
+            }
+        }
         private void LoadLive2d()
         {
             Debug.Log("LoadLive2d");
@@ -856,16 +814,26 @@ namespace Character
         {
             loadingPanel.SetActive(true);
             yield return null;
-            live2DModelLoader.LoadModelFromFile(curCharacter, curCharacter.live2dPath,OnLive2dLoadSuccess);
+            live2DModelLoader.LoadModelFromFile(curCharacter, curCharacter.live2dPath,OnModelLoadSuccess);
+        }
+        private void LoadCustomModel()
+        {
+            Debug.Log("LoadCustomModel");
+            StartCoroutine(LoadCustomModelIE());
+        }
+        IEnumerator LoadCustomModelIE()
+        {
+            loadingPanel.SetActive(true);
+            yield return null;
+            customModelLoader.LoadModelFromFile(curCharacter, curCharacter.live2dPath,OnModelLoadSuccess);
         }
         /// <summary>
         /// 模型成功加载后
         /// NEEDCHANGE
         /// </summary>
         /// <param name="model"></param>
-        void OnLive2dLoadSuccess(Live2DController model)
+        void OnModelLoadSuccess(GeneralModel model)
         {
-            Debug.Log(model);
             if (model == null)
             {
                 loadingPanel.SetActive(false);
@@ -875,36 +843,53 @@ namespace Character
             }
             loadingPanel.SetActive(false);
             curModel = model;
-            curModel.characterData = curCharacter;
-            curModel.autoLookAtCenter.localPosition = curCharacter.lookCenter;
-            if (live2DModelLoader.modelData == curCharacter)
+            if (curModel.GetType() == typeof(Live2DController) || curModel.GetType() == typeof(ImageModel))
             {
+                curModel.OnLoadSuccess(curCharacter,live2DModelLoader);
+                if (live2DModelLoader.modelData == curCharacter)
+                {
+                    curModel.SetLayer(101);
+                    curModel.SetColor(curCharacter.backgroundLight);
+                    SetModelToUI();
+                    FitModelToUI();
+                    loadButton.gameObject.SetActive(false);
+                }
+                else
+                {
+                    curModel.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                curModel.OnLoadSuccess(curCharacter,customModelLoader);
                 curModel.SetLayer(101);
-                curModel.SetBreath(curCharacter.isBreath);
-                curModel.SetLookMouse(curCharacter.isLookAt);
-                curModel.SetBlink(curCharacter.isBlink);
                 curModel.SetColor(curCharacter.backgroundLight);
                 SetModelToUI();
                 FitModelToUI();
                 loadButton.gameObject.SetActive(false);
             }
-            else
-            {
-                curModel.gameObject.SetActive(false);
-            }
+            // curModel.autoLookAtCenter.localPosition = curCharacter.lookCenter;
+
             UpdateModelShow();
-            SetParametersValue();
+            // SetParametersValue();
             // SetMotionValue();
-            SetExpValue();
+            // SetExpValue();
         }
         /// <summary>
         /// 设置角色的live2d
         /// </summary>
-        public void SetLive2d()
+        private void SetLive2d()
         {
-            StartCoroutine(GetPath());
+            StartCoroutine(GetLive2dPath());
         }
-        IEnumerator GetPath()
+        /// <summary>
+        /// 设置角色的自定义模型
+        /// </summary>
+        private void SetCustomModel()
+        {
+            StartCoroutine(GetCustomModelPath());
+        }
+        IEnumerator GetLive2dPath()
         {
             loadingPanel.SetActive(true);
             var extensions = new[]
@@ -949,10 +934,49 @@ namespace Character
                         curModel.gameObject.SetActive(false);
                     }
                 }
-                OnLive2dLoadSuccess(model);
+                OnModelLoadSuccess(model);
             });
         }
+        IEnumerator GetCustomModelPath()
+        {
+            loadingPanel.SetActive(true);
+            var extensions = new[]
+            {
+                new ExtensionFilter("Model File", "vtam"),
+            };
+            var title = "选择模型文件";
+            switch (LocalizerManager.GetCode())
+            {
+                case "zh-Hans":
+                    title = "选择模型文件";
+                    break;
+                case "en":
+                    title = "Choose Model File";
+                    break;
+            }
+            string[] paths = StandaloneFileBrowser.OpenFilePanel(title, "", extensions, false);
 
+            if (paths.Length == 0 || string.IsNullOrEmpty(paths[0]))
+            {
+                Debug.LogWarning("未选择模型文件。");
+                loadingPanel.SetActive(false);
+                yield break;
+            }
+            string modelJsonPath = paths[0];
+            customModelLoader.LoadModelFromFile(curCharacter,modelJsonPath, model =>
+            {
+                curCharacter.live2dPath = modelJsonPath;
+                SetData();
+                loadingPanel.SetActive(false);
+                curModel=model;
+                if (curModel)
+                {
+                    curModel.gameObject.SetActive(_needShowLive2d);
+                    curModel.SetLayer(101);
+                }
+                OnModelLoadSuccess(model);
+            });
+        }
         public void ResetModel()
         {
             switch (LocalizerManager.GetCode())
@@ -981,8 +1005,6 @@ namespace Character
             curCharacter.modelExps.Clear();
             curCharacter.modelMotions.Clear();
             curCharacter.activeModelExps.Clear();
-            parameterPageItems.Clear();
-            expPageItems.Clear();
             live2DModelLoader.RemoveCurModel();
             SetData();
             UpdateModelShow();
@@ -1044,7 +1066,10 @@ namespace Character
             float scaleX = uiWidth / modelWidth;
             float scaleY = uiHeight / modelHeight;
             float scale = Mathf.Min(scaleX, scaleY); // 等比缩放
-
+            if (scale > 1000)
+            {
+                scale = 1;
+            }
             // 6. 设置模型位置和缩放
             curModel.transform.localPosition = localCenter;
             curModel.transform.localScale = Vector3.one * (scale * curCharacter.uiScaleCoefficient);
@@ -1054,7 +1079,7 @@ namespace Character
             _scaleChanged = true;
             Debug.Log(curCharacter.uiScale);
         }
-        public void FitBoxColliderToModel()
+        private void FitBoxColliderToModel()
         {
             if (!curModel) return;
 
@@ -1063,11 +1088,11 @@ namespace Character
             Vector3 localCenter = curModel.transform.InverseTransformPoint(bounds.center);
             Vector3 localSize = curModel.transform.InverseTransformVector(bounds.size);
             // 获取 BoxCollider2D，如果没有则添加
-            var boxCollider2D = curModel.boxCollider2D;
+            var boxCollider2d = curModel.boxCollider2d;
             
             // 设置碰撞体尺寸和偏移
-            boxCollider2D.size = localSize;
-            boxCollider2D.offset = localCenter;
+            boxCollider2d.size = localSize;
+            boxCollider2d.offset = localCenter;
         }
         /// <summary>
         /// 设置模型是否展示
@@ -1112,7 +1137,7 @@ namespace Character
                                     break;
                             }
                             loadButton.onPointerClick.RemoveAllListeners();
-                            loadButton.onPointerClick.AddListener(LoadLive2d);
+                            loadButton.onPointerClick.AddListener(LoadModel);
                         }
                         else
                         {
@@ -1144,7 +1169,7 @@ namespace Character
                             break;
                     }
                     loadButton.onPointerClick.RemoveAllListeners();
-                    loadButton.onPointerClick.AddListener(LoadLive2d);
+                    loadButton.onPointerClick.AddListener(LoadModel);
                     btns.gameObject.SetActive(false);
                 }
                 else
@@ -1194,27 +1219,16 @@ namespace Character
                 }
             }
         }
-        /// <summary>
-        /// 播放指定动画
-        /// </summary>
-        /// <param name="target"></param>
-        public void PlayMotion(AnimationClip target)
-        {
-            if (curModel.characterData == curCharacter)
-            {
-                curModel.PlayMotion(target);
-            }
-        }
         
         /// <summary>
         /// 播放指定动画组
         /// </summary>
-        /// <param name="targets"></param>
-        private void PlayMotions(List<AnimationClip> targets)
+        /// <param name="target"></param>
+        public void PlayMotion(ModelMotion target)
         {
             if (curModel !=null && curModel.characterData == curCharacter)
             {
-                curModel.PlayMotions(targets);
+                curModel.PlayMotion(target);
             }
         }
         /// <summary>
@@ -1243,425 +1257,20 @@ namespace Character
                 curModel.FakeTalk(3);
             }
         }
-        #endregion
-        
-        #region 动画/表情相关
-        
-        /// <summary>
-        /// 设置表情列表
-        /// </summary>
-        private void SetExpValue()
-        {
-            // 模型的表情数据
-            var exps = live2DModelLoader.expressions;
-            // curCharacter.modelExps.Clear();
-            // 用户存储的表情数据
-            var savedExpDict = curCharacter.modelExps.ToDictionary(e => e.expName);
-
-            // 最终页面展示的表情数据
-            expPageItems = new List<ModelExp>();
-
-            // 记录已添加的 key，避免重复添加
-            HashSet<string> addedKeys = new();
-
-            // 遍历模型提供的表情数据，优先使用用户存储数据
-            foreach (var exp in exps)
-            {
-                if (savedExpDict.TryGetValue(exp.Key, out var savedExp))
-                {
-                    if (savedExp.exp3Json.Parameters == null)
-                    {
-                        savedExp.exp3Json = exp.Value;
-                    }
-
-                    savedExp.type = 0;
-                    expPageItems.Add(savedExp);
-                }
-                else
-                {
-                    var newItem = new ModelExp(exp.Value, exp.Key, exp.Key, true)
-                    {
-                        type = 0
-                    };
-                    expPageItems.Add(newItem);
-                }
-                addedKeys.Add(exp.Key);
-            }
-
-            // 添加 savedExpDict 中独有的表情（模型中没有）
-            foreach (var kv in savedExpDict)
-            {
-                if (!addedKeys.Contains(kv.Key))
-                {
-                    Debug.Log(kv.Value.expName);
-                    kv.Value.type = 1;
-                    expPageItems.Add(kv.Value);
-                }
-            }
-            // expScrollList.SetData(expPageItems);
-
-            // 根据是否显示禁用表情进行过滤
-            if (isShowDisableExpToggle.isOn)
-            {
-                expPageList.SetData(expPageItems);
-            }
-            else
-            {
-                var list = expPageItems.Where(expPageItem => expPageItem.expOn).ToList();
-                expPageList.SetData(list);
-            }
-        }
-
-        public void RemoveCusExp(ModelExp target)
-        {
-            if (expPageItems.Contains(target))
-            {
-                expPageItems.Remove(target);
-                expPageList.SetData(expPageItems);
-                SetData();
-            }
-        }
 
         /// <summary>
-        /// 保存表情
+        /// 打开组件界面
         /// </summary>
-        private void SaveExp()
+        public void ShowComponentPanel()
         {
-            curCharacter.modelExps.Clear();
-            foreach (var exp in expPageItems)
-            {
-                curCharacter.modelExps.Add(exp);
-            }
+            componentPanel.Show(curCharacter,curModel);
         }
-        private void IsShowDisableExps(bool isShow)
+        public void CreateModel()
         {
-            if (isShow)
-            {
-                expPageList.SetData(expPageItems);
-            }
-            else
-            {
-                var list = expPageItems.Where(expPageItem => expPageItem.expOn).ToList();
-                expPageList.SetData(list);
-            }
-        }
-        public void ShowCustomExpPanel()
-        {
-            _curCustomExp = new ModelExp();
-            TakeASnapshot();
-            customExpPanel.Show();
-            parameterPageList.Refresh();
-            customExpNameInput.text = "";
-            customExpNickNameInput.text = "";
-            customExpFadeInInput.text = "0.5";
-            customExpFadeOutInput.text = "0.5";
-            customExpParameterPageList.Clear();
-            _customExpChanged = false;
-            
-            curModel.SetBlink(false);
-            curModel.SetBreath(false);
-            curModel.SetLookMouse(false);
-        }
-        public void ShowCustomExpPanel(ExpLine expLine)
-        {
-            _curCustomExp = expLine.GetModeExp();
-            TakeASnapshot();
-            customExpPanel.Show();
-            parameterPageList.Refresh();
-            _customExpChanged = false;
-            customExpNameInput.text = _curCustomExp.expName;
-            customExpNickNameInput.text = _curCustomExp.expNickname;;
-            customExpFadeInInput.text = _curCustomExp.exp3Json.FadeInTime.ToString(CultureInfo.InvariantCulture);
-            customExpFadeOutInput.text = _curCustomExp.exp3Json.FadeOutTime.ToString(CultureInfo.InvariantCulture);
-            // customExpParameterPageList.SetData();
-            _curCustomExp.tempParameters.Clear();
-            foreach (var jsonParameter in _curCustomExp.exp3Json.Parameters)
-            {
-                foreach (var parameterPageItem in parameterPageItems)
-                {
-                    if (parameterPageItem.parameterId == jsonParameter.Id)
-                    {
-                        _curCustomExp.tempParameters.Add(new ModelExp.TmpExpParameter()
-                        {
-                            parameterId = jsonParameter.Id,
-                            parameterDisplayName = parameterPageItem.displayName,
-                            value = jsonParameter.Value,
-                        });
-                        break;
-                    }
-                }
-
-
-            }
-            customExpParameterPageList.SetData(_curCustomExp.tempParameters);
-            _customExpChanged = false;
-            curModel.SetBlink(false);
-            curModel.SetBreath(false);
-            curModel.SetLookMouse(false);
-        }   
-        public void AddCustomExpParameter(ModelParameter target)
-        {
-            _customExpChanged = true;
-            _curCustomExp.AddTmpExpParameter(target);
-            customExpParameterPageList.SetData(_curCustomExp.tempParameters);
-        }
-        public void RemoveCustomExpParameter(ModelExp.TmpExpParameter target)
-        {
-            _customExpChanged = true;
-            _curCustomExp.RemoveTmpExpParameter(target);
-            customExpParameterPageList.SetData(_curCustomExp.tempParameters);
-        }
-        public void HideCustomExpPanel()
-        {
-            if (_customExpChanged)
-            {
-                switch (LocalizerManager.GetCode())
-                {
-                    case "zh-Hans":
-                        MessageManager.instance.ShowPropUpMessage("保存","是否需要保存当前的自定义表情？", SaveAndHideCustomExp, () =>
-                        {
-                            _curCustomExp = null;
-                            customExpPanel.Hide();
-                            UseSnapshot();
-                            parameterPageList.Refresh();
-                            curModel.SetBlink(curCharacter.isBlink);
-                            curModel.SetBreath(curCharacter.isBreath);
-                            curModel.SetLookMouse(curCharacter.isLookAt);
-                            curModel.ClearAllExpressions();
-                        });
-                        break;
-                    case "en":
-                        MessageManager.instance.ShowPropUpMessage("Save?","Do you want to save the current custom expression?", SaveAndHideCustomExp, () =>
-                        {
-                            _curCustomExp = null;
-                            customExpPanel.Hide();
-                            UseSnapshot();
-                            parameterPageList.Refresh();
-                            curModel.SetBlink(curCharacter.isBlink);
-                            curModel.SetBreath(curCharacter.isBreath);
-                            curModel.SetLookMouse(curCharacter.isLookAt);
-                            curModel.ClearAllExpressions();
-                        });
-                        break;
-                }
-            }
-            else
-            {
-                customExpPanel.Hide();
-                UseSnapshot();
-                parameterPageList.Refresh();
-                curModel.SetBlink(curCharacter.isBlink);
-                curModel.SetBreath(curCharacter.isBreath);
-                curModel.SetLookMouse(curCharacter.isLookAt);
-                curModel.ClearAllExpressions();
-            }
-        }
-        public void SaveAndHideCustomExp()
-        {
-            if (customExpNameInput.text.Length <= 0)
-            {
-                MessageManager.instance.ShowMessage("请填写 表情名称");
-                return;
-            }
-            if (customExpNickNameInput.text.Length <= 0)
-            {
-                MessageManager.instance.ShowMessage("请填写 表情识别名称");
-                return;
-            }
-            if (customExpFadeInInput.text.Length <= 0)
-            {
-                MessageManager.instance.ShowMessage("请填写 淡入时长");
-                return;
-            }
-            if (customExpFadeOutInput.text.Length <= 0)
-            {
-                MessageManager.instance.ShowMessage("请填写 淡出时长");
-                return;
-            }
-            if (_curCustomExp.tempParameters.Count <= 0)
-            {
-                MessageManager.instance.ShowMessage("请至少添加一个表情参数");
-                return;
-            }
-
-            _customExpChanged = false;
-            _curCustomExp.expName = customExpNameInput.text;
-            _curCustomExp.expNickname = customExpNickNameInput.text;
-            _curCustomExp.exp3Json.FadeInTime = float.Parse(customExpFadeInInput.text);
-            _curCustomExp.exp3Json.FadeOutTime = float.Parse(customExpFadeOutInput.text);
-            _curCustomExp.exp3Json.Parameters = new CubismExp3Json.SerializableExpressionParameter[_curCustomExp.tempParameters.Count];
-            for (var i = 0; i < _curCustomExp.tempParameters.Count; i++)
-            {
-                var tmp = new CubismExp3Json.SerializableExpressionParameter
-                {
-                    Id = _curCustomExp.tempParameters[i].parameterId,
-                    Value = _curCustomExp.tempParameters[i].value,
-                    Blend = nameof(CubismParameterBlendMode.Override)
-                };
-                _curCustomExp.exp3Json.Parameters[i] = tmp;
-            }
-
-            var flag = false;
-            for (var i = 0; i < expPageItems.Count; i++)
-            {
-                if (expPageItems[i].expName == _curCustomExp.expName)
-                {
-                    expPageItems[i] = _curCustomExp;
-                    flag = true;
-                    break;
-                }
-            }
-
-            if (!flag)
-            {
-                expPageItems.Add(_curCustomExp);
-            }
-            customExpPanel.Hide();
-            _isChangeData = true;
-            saveButton.gameObject.SetActive(true);
-            UseSnapshot();
-            parameterPageList.Refresh();
-            expPageList.SetData(expPageItems);
-            curModel.SetBlink(curCharacter.isBlink);
-            curModel.SetBreath(curCharacter.isBreath);
-            curModel.SetLookMouse(curCharacter.isLookAt);
-        }
-        #endregion
-        
-        #region 参数/组件 相关
-        /// <summary>
-        /// 为所有参数创建一个快照
-        /// </summary>
-        private void TakeASnapshot()
-        {
-            _paramsSnapshot.Clear();
-            foreach (var parameterPageItem in parameterPageItems)
-            {
-                _paramsSnapshot.Add(parameterPageItem,parameterPageItem.parameterValue);
-            }
-        }
-        /// <summary>
-        /// 使用上一个快照
-        /// </summary>
-        private void UseSnapshot()
-        {
-            _needUseSnapshot = true;
-        }
-        /// <summary>
-        /// 搜索参数
-        /// </summary>
-        public void Search()
-        {
-            var keyword = parameterSearchInput.text?.ToLower();
-    
-            if (string.IsNullOrEmpty(keyword))
-            {
-                // 默认排序：按 parameterId 升序
-                parameterPageList.SetData(parameterPageItems);
-                return;
-            }
-
-            var results = parameterPageItems
-                .Select(p => new
-                {
-                    Item = p,
-                    Score = GetMatchScore(p, keyword)
-                })
-                .Where(x => x.Score > 0)
-                .OrderByDescending(x => x.Score)
-                .Select(x => x.Item)
-                .ToList();
-
-            parameterPageList.SetData(results);
-        }
-        private int GetMatchScore(ModelParameter p, string keyword)
-        {
-            int score = 0;
-
-            // Exact matches: +100
-            if (string.Equals(p.parameterId, keyword, StringComparison.OrdinalIgnoreCase)) score += 100;
-            else if (!string.IsNullOrEmpty(p.parameterId) && p.parameterId.ToLower().StartsWith(keyword)) score += 50;
-            else if (!string.IsNullOrEmpty(p.parameterId) && p.parameterId.ToLower().Contains(keyword)) score += 20;
-
-            if (string.Equals(p.parameterName, keyword, StringComparison.OrdinalIgnoreCase)) score += 80;
-            else if (!string.IsNullOrEmpty(p.parameterName) && p.parameterName.ToLower().StartsWith(keyword)) score += 40;
-            else if (!string.IsNullOrEmpty(p.parameterName) && p.parameterName.ToLower().Contains(keyword)) score += 15;
-
-            if (string.Equals(p.displayName, keyword, StringComparison.OrdinalIgnoreCase)) score += 60;
-            else if (!string.IsNullOrEmpty(p.displayName) && p.displayName.ToLower().StartsWith(keyword)) score += 30;
-            else if (!string.IsNullOrEmpty(p.displayName) && p.displayName.ToLower().Contains(keyword)) score += 10;
-
-            return score;
-        }
-        /// <summary>
-        /// 显示和设置参数
-        /// </summary>
-        private void SetParametersValue()
-        {
-            parameterSearchInput.text = "";
-            if (curModel.modelData == null)
-            {
-                parameterPageItems.Clear();
-                return;
-            }
-            var parameters = curModel.modelData.Parameters;
-            var savedParamDict = curModel.characterData.modelParameters
-                .ToDictionary(p => p.parameterId);
-
-            parameterPageItems = new List<ModelParameter>();
-            foreach (var parameter in parameters)
-            {
-                if (savedParamDict.TryGetValue(parameter.Id, out var savedParam))
-                {
-                    savedParam.SetParameter(parameter);
-                    parameterPageItems.Add(savedParam);
-                }
-                else
-                {
-                    parameterPageItems.Add(new ModelParameter(parameter));
-                }
-            }
-            //排序
-            // parameterPageItems = parameterPageItems
-            //     .OrderBy(p => p.parameterId, NaturalComparer)
-            //     .ToList();
-
-            parameterPageList.SetData(parameterPageItems);
-        }
-
-        /// <summary>
-        /// 所有参数重置
-        /// </summary>
-        public void SetParametersValuesDef()
-        {
-            foreach (var parameterItem in parameterPageList.GetData())
-            {
-                if (parameterItem is ModelParameter itemData)
-                {
-                    _needSetDef.Add(itemData);
-                }
-            }
-        }
-        public void SaveParameters()
-        {
-            Debug.Log("SaveParameters");
-            curCharacter.modelParameters = new List<ModelParameter>();
-            foreach (var parameterItem in  parameterPageItems)
-            {
-                curCharacter.modelParameters.Add(parameterItem);
-            }
-            SetData();
-        }
-        public void GotoTargetParam(ModelExp.TmpExpParameter target)
-        {
-            foreach (var parameterPageItem in parameterPageItems)
-            {
-                if (parameterPageItem.parameterId == target.parameterId)
-                {
-                    parameterPageList.GotoItem(parameterPageItem);
-                    break;
-                }
-            }
+            var model = new GameObject().AddComponent<CustomModel>();
+            model.SetModelData(new CustomModelData());
+            OnModelLoadSuccess(model);
+            componentPanel.Show(curCharacter,curModel);
         }
         #endregion
         

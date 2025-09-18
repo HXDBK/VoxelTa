@@ -5,6 +5,7 @@ using System.Linq;
 using Character;
 using Live2D.Cubism.Framework;
 using Live2D.Cubism.Framework.Json;
+using Model;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,9 +33,14 @@ namespace Live2D
 
         [Header("立绘表情")]
         [HideInInspector]
-        public List<ModelExp> expPageItems = new();
-        public List<ModelParameter> parameterPageItems = new();
+        public List<ModelExp> expPageItems;
+        public List<ModelParameter> parameterPageItems;
         public WPageList expPageList;
+        
+        [Header("立绘动画")]
+        [HideInInspector]
+        public List<ModelMotion> motionPageItems;
+        public WPageList motionPageList;
 
         public Toggle isShowDisableExpToggle;
         // 自定义表情
@@ -46,7 +52,6 @@ namespace Live2D
         public TMP_InputField customExpFadeOutInput;
         private ModelExp _curCustomExp;
         private readonly Dictionary<ModelParameter,float> _paramsSnapshot = new();
-        private bool _needUseSnapshot;
         private bool _customExpChanged;
         private Camera Camera
         {
@@ -63,7 +68,17 @@ namespace Live2D
         //设置模型中心
         private bool _isSettingCenter;
         public GameObject setCenterPanel;
-        
+
+        protected override void Start()
+        {
+            base.Start();
+            isShowDisableExpToggle.onValueChanged.AddListener(IsShowDisableExps);
+            isBreathToggle.onValueChanged.AddListener(_=>SaveData());
+            isBlinkToggle.onValueChanged.AddListener(_=>SaveData());
+            isLookMouseToggle.onValueChanged.AddListener(_=>SaveData());
+            parameterSearchInput.onSubmit.AddListener(_=>Search());
+        }
+
         private void Update()
         {
             if (_isSettingCenter)
@@ -76,39 +91,50 @@ namespace Live2D
             }
         }
 
-        public void Show(CharacterData character)
+        private void LateUpdate()
+        {
+            if (_needSetDef.Count > 0)
+            {
+                foreach (var parameterListItemData in _needSetDef)
+                {
+                    parameterListItemData.ResetToDefault();
+                }
+                _needSetDef.Clear();
+            }
+        }
+
+        public void Show(CharacterData character,GeneralModel model)
         {
             _curCharacter = character;
+            _curModel = model as Live2DController;
+            if (_curModel == null){return;}
+            
             Show();
+            ShowParametersValue();
+            SetExpValue(_curModel.expressions);
+            SetMotionValue(null);
         }
+
+        public override void Hide()
+        {
+            SaveParameters();
+            SaveExp();
+            SaveMotion();
+            if (_curModel)
+            {
+                _curModel.ClearAllExpressions();
+                _curModel.motionPlayer.Stop();
+            }
+            base.Hide();
+        }
+
         /// <summary>
         /// 显示和设置参数
         /// </summary>
-        private void SetParametersValue()
+        private void ShowParametersValue()
         {
             parameterSearchInput.text = "";
-            if (_curModel.modelData == null)
-            {
-                parameterPageItems.Clear();
-                return;
-            }
-            var parameters = _curModel.modelData.Parameters;
-            var savedParamDict = _curModel.characterData.modelParameters
-                .ToDictionary(p => p.parameterId);
-
-            parameterPageItems = new List<ModelParameter>();
-            foreach (var parameter in parameters)
-            {
-                if (savedParamDict.TryGetValue(parameter.Id, out var savedParam))
-                {
-                    savedParam.SetParameter(parameter);
-                    parameterPageItems.Add(savedParam);
-                }
-                else
-                {
-                    parameterPageItems.Add(new ModelParameter(parameter));
-                }
-            }
+            parameterPageItems = _curModel.parameterPageItems;
             //排序
             // parameterPageItems = parameterPageItems
             //     .OrderBy(p => p.parameterId, NaturalComparer)
@@ -144,57 +170,59 @@ namespace Live2D
                 }
             }
         }
+        /// <summary>
+        /// 搜索参数
+        /// </summary>
+        public void Search()
+        {
+            var keyword = parameterSearchInput.text?.ToLower();
+    
+            if (string.IsNullOrEmpty(keyword))
+            {
+                // 默认排序：按 parameterId 升序
+                parameterPageList.SetData(parameterPageItems);
+                return;
+            }
+
+            var results = parameterPageItems
+                .Select(p => new
+                {
+                    Item = p,
+                    Score = GetMatchScore(p, keyword)
+                })
+                .Where(x => x.Score > 0)
+                .OrderByDescending(x => x.Score)
+                .Select(x => x.Item)
+                .ToList();
+
+            parameterPageList.SetData(results);
+        }
+        private int GetMatchScore(ModelParameter p, string keyword)
+        {
+            int score = 0;
+
+            // Exact matches: +100
+            if (string.Equals(p.parameterId, keyword, StringComparison.OrdinalIgnoreCase)) score += 100;
+            else if (!string.IsNullOrEmpty(p.parameterId) && p.parameterId.ToLower().StartsWith(keyword)) score += 50;
+            else if (!string.IsNullOrEmpty(p.parameterId) && p.parameterId.ToLower().Contains(keyword)) score += 20;
+
+            if (string.Equals(p.parameterName, keyword, StringComparison.OrdinalIgnoreCase)) score += 80;
+            else if (!string.IsNullOrEmpty(p.parameterName) && p.parameterName.ToLower().StartsWith(keyword)) score += 40;
+            else if (!string.IsNullOrEmpty(p.parameterName) && p.parameterName.ToLower().Contains(keyword)) score += 15;
+
+            if (string.Equals(p.displayName, keyword, StringComparison.OrdinalIgnoreCase)) score += 60;
+            else if (!string.IsNullOrEmpty(p.displayName) && p.displayName.ToLower().StartsWith(keyword)) score += 30;
+            else if (!string.IsNullOrEmpty(p.displayName) && p.displayName.ToLower().Contains(keyword)) score += 10;
+
+            return score;
+        }
         
         /// <summary>
         /// 设置表情列表
         /// </summary>
         private void SetExpValue(Dictionary<string,CubismExp3Json> exps)
         {
-            // curCharacter.modelExps.Clear();
-            // 用户存储的表情数据
-            var savedExpDict = _curCharacter.modelExps.ToDictionary(e => e.expName);
-
-            // 最终页面展示的表情数据
-            expPageItems = new List<ModelExp>();
-
-            // 记录已添加的 key，避免重复添加
-            HashSet<string> addedKeys = new();
-
-            // 遍历模型提供的表情数据，优先使用用户存储数据
-            foreach (var exp in exps)
-            {
-                if (savedExpDict.TryGetValue(exp.Key, out var savedExp))
-                {
-                    if (savedExp.exp3Json.Parameters == null)
-                    {
-                        savedExp.exp3Json = exp.Value;
-                    }
-
-                    savedExp.type = 0;
-                    expPageItems.Add(savedExp);
-                }
-                else
-                {
-                    var newItem = new ModelExp(exp.Value, exp.Key, exp.Key, true)
-                    {
-                        type = 0
-                    };
-                    expPageItems.Add(newItem);
-                }
-                addedKeys.Add(exp.Key);
-            }
-
-            // 添加 savedExpDict 中独有的表情（模型中没有）
-            foreach (var kv in savedExpDict)
-            {
-                if (!addedKeys.Contains(kv.Key))
-                {
-                    Debug.Log(kv.Value.expName);
-                    kv.Value.type = 1;
-                    expPageItems.Add(kv.Value);
-                }
-            }
-            // expScrollList.SetData(expPageItems);
+            expPageItems = _curModel.expPageItems;
 
             // 根据是否显示禁用表情进行过滤
             if (isShowDisableExpToggle.isOn)
@@ -206,6 +234,11 @@ namespace Live2D
                 var list = expPageItems.Where(expPageItem => expPageItem.expOn).ToList();
                 expPageList.SetData(list);
             }
+        }        
+        private void SetMotionValue(Dictionary<string,CubismMotion3Json> motions)
+        {
+            motionPageItems = _curModel.motionPageItems;
+            motionPageList.SetData(motionPageItems);
         }
         /// <summary>
         /// 移除指定表情
@@ -271,8 +304,6 @@ namespace Live2D
                         break;
                     }
                 }
-
-
             }
             customExpParameterPageList.SetData(_curCustomExp.tempParameters);
             _customExpChanged = false;
@@ -317,7 +348,7 @@ namespace Live2D
             }
         }
         /// <summary>
-        /// 关闭自定义表情界面 不保存
+        /// 关闭自定义表情界面
         /// </summary>
         public void HideCustomExpPanel()
         {
@@ -452,7 +483,7 @@ namespace Live2D
         /// </summary>
         private void UseSnapshot()
         {
-            _needUseSnapshot = true;
+            _curModel.SetParameterValue(_paramsSnapshot);
         }
         /// <summary>
         /// 开始设置眼睛中心点
@@ -473,6 +504,7 @@ namespace Live2D
             _curModel.SetLookMouse(isLookMouseToggle.isOn);
             setCenterPanel.SetActive(false);
             _curModel.autoLookAtCenter.gameObject.SetActive(false);
+            SaveData();
             MessageManager.instance.ShowMessage("已设置模型视线中心点");
         }
         /// <summary>
@@ -483,7 +515,13 @@ namespace Live2D
             _curCharacter.isBlink = isBlinkToggle.isOn;
             _curCharacter.isBreath = isBreathToggle.isOn;
             _curCharacter.isLookAt = isLookMouseToggle.isOn;
+            
+            _curModel.SetBlink(isBlinkToggle.isOn);
+            _curModel.SetBreath(isBreathToggle.isOn);
+            _curModel.SetLookMouse(isLookMouseToggle.isOn);
+            
             _curCharacter.lookCenter = _curModel.autoLookAtCenter.localPosition;
+            CharacterManager.instance.Changed();
         }
         /// <summary>
         /// 保存表情
@@ -494,6 +532,15 @@ namespace Live2D
             foreach (var exp in expPageItems)
             {
                 _curCharacter.modelExps.Add(exp);
+            }
+            CharacterManager.instance.Changed();
+        }
+        private void SaveMotion()
+        {
+            _curCharacter.modelMotions.Clear();
+            foreach (var motion in motionPageItems)
+            {
+                _curCharacter.modelMotions.Add(motion);
             }
             CharacterManager.instance.Changed();
         }

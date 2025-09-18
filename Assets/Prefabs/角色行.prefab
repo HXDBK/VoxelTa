@@ -19,7 +19,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &936216075129350607
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1050,6 +1050,7 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     uiPos: {x: 0, y: 0, z: 0}
     uiScale: {x: 1, y: 1, z: 1}
+    uiScaleCoefficient: 1
     deskPos: {x: 0, y: 0, z: 0}
     deskScale: {x: 1, y: 1, z: 1}
     easyInputPos: {x: 0, y: 0, z: 0}
@@ -1059,6 +1060,7 @@ MonoBehaviour:
     modelMotions: []
     modelExps: []
     activeModelExps: []
+    id: e9a0ed563ec74eb7821ffffb36880551
     talkData:
       dialogueEntries: []
   delete: {fileID: 1278184293472653094}

@@ -24,9 +24,8 @@ namespace TTS
         [SerializeField] private float bufferTime = 0.5f; // 缓冲时间（秒）
         [SerializeField] private int audioClipLength = 10; // AudioClip长度（秒）
     
-        private AudioSource audioSource;
+        public AudioSource audioSource;
         private float[] audioBuffer;
-        private int writePosition = 0;
         private int readPosition = 0;
         private bool isStreaming = false;
         private bool hasWavHeader = false;
@@ -44,12 +43,6 @@ namespace TTS
 
         void Awake()
         {
-            audioSource = GetComponent<AudioSource>();
-            if (audioSource == null)
-            {
-                audioSource = gameObject.AddComponent<AudioSource>();
-            }
-            
             // 初始化但不立即设置AudioClip
             InitializeAudioClip();
         }
@@ -144,7 +137,6 @@ namespace TTS
             }
         
             // 重置所有状态
-            writePosition = 0;
             readPosition = 0;
             hasWavHeader = false;
             
@@ -207,6 +199,7 @@ namespace TTS
             {
                 isStreaming = false;
                 currentRequest = null;
+                audioIcon.Stop();
             }
         }
     

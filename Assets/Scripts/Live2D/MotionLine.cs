@@ -1,4 +1,6 @@
+using System;
 using Character;
+using Live2D.Cubism.Framework.Json;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,36 +8,50 @@ using WUI;
 
 namespace Live2D
 {
-    public class MotionLine : MonoBehaviour
+    public class MotionLine : PageLineItem
     {
         public TMP_InputField motionNameInput;
         public TMP_Text fileNameText;
         public WButton playButton;
         public Toggle isOn;
+        public Toggle isLoop;
 
-        public AnimationClip Clip => _clip;
-        private AnimationClip _clip;
-        public void SetData(AnimationClip target)
+        private ModelMotion _modelMotion;
+
+        private void Start()
         {
-            _clip = target;
-            motionNameInput.text = target.name;
-            fileNameText.text = target.name;
-            playButton.onPointerClick.AddListener(()=>CharacterManager.instance.PlayMotion(_clip));
+            playButton.onPointerClick.RemoveAllListeners();
+            playButton.onPointerClick.AddListener(()=>CharacterManager.instance.PlayMotion(_modelMotion));
+            isLoop.onValueChanged.RemoveAllListeners();
+            isLoop.onValueChanged.AddListener(SetLoop);
+            motionNameInput.onValueChanged.RemoveAllListeners();
+            motionNameInput.onValueChanged.AddListener(SetNickName);
         }
-        public void SetData(ModelMotion target)
+
+        private void SetLoop(bool target)
         {
-            motionNameInput.text = target.motionNickname;
-            isOn.isOn = target.motionOn;
+            _modelMotion.motionLoop = target;
+            // CharacterManager.instance.Changed();
         }
-        public ModelMotion GetMotionData()
+        private void SetNickName(string target)
         {
-            var result = new ModelMotion
-            {
-                motionName = _clip.name,
-                motionNickname = motionNameInput.text,
-                motionOn = isOn.isOn
-            };
-            return result;
+            _modelMotion.motionNickname = target;
+            // CharacterManager.instance.Changed();
+        }
+        public override IPageListItem GetData()
+        {
+            return _modelMotion;
+        }
+
+        public override void SetData(IPageListItem item)
+        {
+            var target = item as ModelMotion;
+            if (target == null) return;
+            _modelMotion = target;
+            motionNameInput.text = _modelMotion.motionNickname;
+            fileNameText.text = _modelMotion.motionName;
+            isOn.isOn = _modelMotion.motionOn;
+            isLoop.isOn = _modelMotion.motionLoop;
         }
     }
 }

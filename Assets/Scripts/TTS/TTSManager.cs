@@ -41,12 +41,9 @@ namespace TTS
         private List<float> _streamBuffer;
         private readonly object _bufferLock = new object();
         private CancellationTokenSource _streamCancellationToken;
-        private volatile bool _hasStartedStreaming = false;
-        private volatile bool _streamEnded = false;
         private byte _pendingByte;
-        private bool _hasPendingByte = false;
-        private long _totalSamplesReceived = 0;
-        private long _totalSamplesPlayed = 0;
+        private readonly long _totalSamplesReceived = 0;
+        private readonly long _totalSamplesPlayed = 0;
         private AudioClip _streamClip;
 
         private void Awake()

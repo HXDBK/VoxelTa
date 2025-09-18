@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Character;
 using DG.Tweening;
@@ -36,11 +37,12 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        modeDropdown.value = SettingData.modeIndex;
-        modeDropdown.RefreshShownValue();
-        modeDropdown.onValueChanged.AddListener(ChangeMode);
+
         if (CharacterManager.instance.curCharacter != null)
         {
+            modeDropdown.value = SettingData.modeIndex;
+            modeDropdown.RefreshShownValue();
+            modeDropdown.onValueChanged.AddListener(ChangeMode);
             StartCoroutine(ChangeModeIE());
         }
         CharacterManager.instance.OnHideCharacterPanel += SetModeAsCurCharacter;
@@ -57,12 +59,17 @@ public class GameManager : MonoBehaviour
     }
     public void SaveData()
     {
-        ES3.Save("characterDatas",CharacterManager.instance.characterDatas);
+        if(CharacterManager.instance.curCharacter==null){return;}
+        string filePath = Path.Combine(Application.persistentDataPath, "Characters",CharacterManager.instance.curCharacter.id + ".vta");
+        ES3.Save("CharacterData",CharacterManager.instance.curCharacter,filePath);
         Debug.Log($"SaveTalkData");
     }
     public void SaveSettingData()
     {
-        ES3.Save("characterDatas",CharacterManager.instance.characterDatas);
+        Debug.Log(CharacterManager.instance.curCharacter);
+        if(CharacterManager.instance.curCharacter==null){return;}
+        string filePath = Path.Combine(Application.persistentDataPath, "Characters",CharacterManager.instance.curCharacter.id + ".vta");
+        ES3.Save("CharacterData",CharacterManager.instance.curCharacter,filePath);
         Debug.Log($"============SaveSettingData==============");
     }
     private void OnSendMessage()
@@ -124,7 +131,7 @@ public class GameManager : MonoBehaviour
         }
     }
     /// <summary>
-    /// 加载图片
+    /// 加载图片到UI
     /// </summary>
     /// <param name="path"></param>
     /// <param name="target"></param>
@@ -180,7 +187,63 @@ public class GameManager : MonoBehaviour
             target.color = Color.white;
         }
     }
-
+    /// <summary>
+    /// 加载图片到sprite
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="target"></param>
+    /// <param name="defSprite"></param>
+    public void LoadSprite(string path, SpriteRenderer target,Sprite defSprite = null)
+    {
+        if (!string.IsNullOrEmpty(path))
+        {
+            try
+            {
+                byte[] fileData = System.IO.File.ReadAllBytes(path);
+                Texture2D texture = new Texture2D(2, 2);
+                
+                if (texture.LoadImage(fileData))
+                {
+                    Sprite newSprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                    target.sprite = newSprite;
+                    target.color = Color.white;
+                }
+                else
+                {
+                    Debug.LogWarning("加载图片失败：" + path);
+                    switch (LocalizerManager.GetCode())
+                    {
+                        case "zh-Hans":
+                            MessageManager.instance.ShowMessage("加载图片失败：" + path,MessageType.Warning);
+                            break;
+                        case "en":
+                            MessageManager.instance.ShowMessage("Failed to load image:" + path,MessageType.Warning);
+                            break;
+                    }
+                    target.sprite = defaultSprite;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("读取图片文件异常：" + ex.Message);
+                switch (LocalizerManager.GetCode())
+                {
+                    case "zh-Hans":
+                        MessageManager.instance.ShowMessage("加载图片失败：" + ex.Message,MessageType.Warning);
+                        break;
+                    case "en":
+                        MessageManager.instance.ShowMessage($"Failed to load image: ", MessageType.Warning);
+                        break;
+                }
+                target.sprite = defaultSprite;
+            }
+        }
+        else
+        {
+            target.sprite = defSprite==null?defaultSprite:defSprite;
+            target.color = Color.white;
+        }
+    }
     private void SetWindowed()
     {
         transparentWindow.DisableTransparentMode();

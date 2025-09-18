@@ -5,6 +5,7 @@ using Live2D;
 using Live2D.Cubism.Core;
 using Live2D.Cubism.Framework;
 using Live2D.Cubism.Framework.Json;
+using Model;
 using UnityEngine;
 using UnityEngine.Serialization;
 using WUI;
@@ -48,8 +49,10 @@ public class CharacterData : IPageListItem
     public List<ModelMotion> modelMotions = new ();
     public List<ModelExp> modelExps = new ();
     public List<Live2DController.ExpressionState> activeModelExps = new ();
-    public List<ModelComponent> components = new ();
+    // public List<ModelComponent> components = new ();
     
+    public DateTime createTime = DateTime.Now;
+    public string id = Guid.NewGuid().ToString("N");
     
     public TalkData talkData;
     public SettingData  SettingData => settingData ??= new SettingData();
@@ -57,6 +60,7 @@ public class CharacterData : IPageListItem
     public SettingData settingData;
     
     public bool HasMemory=>memories is {Count: > 0};
+
     /// <summary>
     /// 获取记忆字符串
     /// </summary>
@@ -75,7 +79,7 @@ public class CharacterData : IPageListItem
     public CharacterData Clone()
     {
         var clone = (CharacterData)this.MemberwiseClone();
-
+        clone.createTime = DateTime.Now;
         // 深拷贝列表
         clone.memories = new List<Memory>();
         foreach (var memory in this.memories)
@@ -96,12 +100,7 @@ public class CharacterData : IPageListItem
         clone.modelMotions = new List<ModelMotion>();
         foreach (var motion in this.modelMotions)
         {
-            clone.modelMotions.Add(new ModelMotion
-            {
-                motionName = motion.motionName,
-                motionNickname = motion.motionNickname,
-                motionOn = motion.motionOn
-            });
+            clone.modelMotions.Add(new ModelMotion(motion.motion3Json,motion.motionName,motion.motionNickname,motion.motionOn));
         }
 
         clone.modelExps = new List<ModelExp>();
@@ -193,11 +192,22 @@ public class ModelParameter : IPageListItem
 /// 模型动作存储
 /// </summary>
 [Serializable]
-public class ModelMotion
+public class ModelMotion : IPageListItem
 {
+    [ES3NonSerializable]
+    public CubismMotion3Json motion3Json;
     public string motionName;
     public string motionNickname;
     public bool motionOn;
+    public bool motionLoop;
+
+    public ModelMotion(CubismMotion3Json motion3Json, string targetMotionName, string targetNickName, bool motionOn,bool motionLoop = false)
+    {
+        this.motion3Json = motion3Json;
+        motionName = targetMotionName;
+        motionNickname = targetNickName;
+        this.motionOn = motionOn;
+    }
 }
 /// <summary>
 /// 模型表情存储

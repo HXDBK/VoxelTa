@@ -63,13 +63,13 @@ namespace Character
                 switch (LocalizerManager.GetCode())
                 {
                     case "zh-Hans":
-                        MessageManager.instance.ShowPropUpMessage("确认",$"确认删除 {characterData.characterTitle} 吗？",()=>CharacterManager.instance.RemoveCharacter(characterData));
+                        MessageManager.instance.ShowPropUpMessage("确认",$"确认删除 {characterData.characterTitle} 吗？\n这个操作无法撤销。",()=>CharacterManager.instance.RemoveCharacter(characterData));
                         break;
                     case "en":
-                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.RemoveCharacter(characterData));
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?\nThis action cannot be undone.",()=>CharacterManager.instance.RemoveCharacter(characterData));
                         break;
                     default:
-                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?",()=>CharacterManager.instance.RemoveCharacter(characterData));
+                        MessageManager.instance.ShowPropUpMessage("Confirm",$"Confirm to delete {characterData.characterTitle} data?\nThis action cannot be undone.",()=>CharacterManager.instance.RemoveCharacter(characterData));
                         break;
                 }
             });
